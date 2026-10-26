@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HermesPay dashboard</title>
+<script src="/vendor/ag-grid/ag-grid-community.min.js"></script>
+<style>body{font-family:system-ui,sans-serif;margin:0 auto;max-width:1200px;padding:16px}.cards{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.card{flex:1;min-width:160px;border:1px solid #ddd;border-radius:10px;padding:12px}.card b{display:block;font-size:24px;margin-top:4px}.card small{color:#666}
+#grid{height:480px}.overdue{background:#fdecea!important}.pill{padding:2px 8px;border-radius:10px;font-size:12px}
+.PAID,.MARKED_AS_PAID{background:#e6f4ea;color:#137333}.SENT,.UNPAID{background:#e8f0fe;color:#1a56c4}.CANCELLED{background:#eee;color:#555}.OVERDUE{background:#fce8e6;color:#c5221f}
+#toast{position:fixed;right:16px;bottom:16px;background:#137333;color:#fff;padding:10px 14px;border-radius:8px;display:none}</style></head>
+<body><h2>HermesPay dashboard <small style="font-size:14px"><a href="/">Chat</a> · <span id="upd"></span></small></h2>
+<div class="cards"><div class="card"><small>Paid</small><b id="paid">-</b><small id="paidn"></small></div><div class="card"><small>Outstanding</small><b id="out">-</b><small id="outn"></small></div>
+<div class="card"><small>Overdue</small><b id="od">-</b><small id="odn"></small></div><div class="card"><small>Invoices</small><b id="cnt">-</b><small id="rate"></small></div></div>
+<div id="grid"></div><div id="toast"></div>
+<script>
+let rate=1500;const today=new Date().toISOString().slice(0,10);
+const open=s=>['SENT','UNPAID','PARTIALLY_PAID','SCHEDULED'].includes(s);
+const isOverdue=r=>open(r.status)&&r.due&&r.due<today;
+const usd=v=>'$'+Number(v||0).toFixed(2), ngn=v=>'₦'+Math.round(Number(v||0)*rate).toLocaleString();
+const api=agGrid.createGrid(document.getElementById('grid'),{
+ columnDefs:[{field:'number',headerName:'#',width:90},{field:'recipient',headerName:'Client',flex:1},
+  {field:'status',width:150,cellRenderer:p=>{const s=isOverdue(p.data)?'OVERDUE':p.value;return `<span class="pill ${s}">${s}</span>`}},
+  {field:'amount',headerName:'USD',width:120,type:'rightAligned',valueFormatter:p=>usd(p.value)},
+  {headerName:'NGN',width:140,type:'rightAligned',valueGetter:p=>Number(p.data.amount||0)*rate,valueFormatter:p=>'₦'+Math.round(p.value).toLocaleString()},
+  {field:'due',headerName:'Due',width:130,sort:'asc'},{field:'id',headerName:'Invoice ID',width:250}],
+ defaultColDef:{sortable:true,filter:true,resizable:true},getRowId:p=>p.data.id,rowClassRules:{overdue:p=>isOverdue(p.data)},rowData:[]});
+function render(rows){api.setGridOption('rowData',rows);const s=f=>rows.filter(f).reduce((a,x)=>a+Number(x.amount||0),0);
+ const P=s(r=>r.status==='PAID'||r.status==='MARKED_AS_PAID'),O=s(r=>open(r.status)),D=s(isOverdue);
+ paid.textContent=usd(P);paidn.textContent=ngn(P);out.textContent=usd(O);outn.textContent=ngn(O);od.textContent=usd(D);odn.textContent=ngn(D);
+ cnt.textContent=rows.length;document.getElementById('rate').textContent=rate+' NGN/USD';upd.textContent='updated '+new Date().toLocaleTimeString()}
+async function load(){const c=await (await fetch('/api/cashflow')).json();rate=c.ngn_per_usd||rate;render(await (await fetch('/api/invoices')).json())}
+load();if(!location.search.includes('nolive')){const es=new EventSource('/api/events');es.addEventListener('invoices',e=>render(JSON.parse(e.data)));
+es.addEventListener('invoice',e=>{const t=document.getElementById('toast');t.textContent=JSON.parse(e.data).text;t.style.display='block';setTimeout(()=>t.style.display='none',8000);load()})}
+</script></body></html>

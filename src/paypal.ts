@@ -62,7 +62,7 @@ export async function listInvoices(status?: string) {
     ? await pp("POST", "/v2/invoicing/search-invoices?page_size=50&total_required=true", { status: [status] })
     : await pp("GET", "/v2/invoicing/invoices?page_size=50&total_required=true&fields=amount");
   return (j.items || []).map((x: any) => ({
-    id: x.id, status: x.status, number: x.detail?.invoice_number, recipient: x.primary_recipients?.[0]?.billing_info?.email_address,
+    id: x.id, status: x.status, number: x.detail?.invoice_number, recipient: x.primary_recipients?.[0]?.billing_info?.email_address, recipient_name: x.primary_recipients?.[0]?.billing_info?.name?.given_name,
     amount: x.amount?.value, currency: x.amount?.currency_code, due: x.detail?.payment_term?.due_date, paid: x.payments?.paid_amount?.value,
   }));
 }
