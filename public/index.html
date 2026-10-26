@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HermesPay</title>
+<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:16px}#log{border:1px solid #ccc;border-radius:8px;height:60vh;overflow:auto;padding:12px}
+.m{margin:8px 0;white-space:pre-wrap}.u{text-align:right}.u span{background:#e8f0fe}.m span{display:inline-block;padding:8px 12px;border-radius:12px;background:#f3f3f3}
+.c{border:1px solid #f0b400;border-radius:8px;padding:10px;background:#fff8e1}button{margin:4px;padding:6px 12px}#f{display:flex;gap:8px;margin-top:8px}#f input{flex:1;padding:10px}</style></head>
+<body><h2>HermesPay</h2><div id="log"></div><div id="f"><input id="i" placeholder="bill tunde@example.com 50k naira for logo design due Friday"><button id="s">Send</button></div>
+<script>
+let session=null;const log=document.getElementById('log'),inp=document.getElementById('i');
+function add(t,c){const d=document.createElement('div');d.className='m '+(c||'');const s=document.createElement('span');s.textContent=t;d.appendChild(s);log.appendChild(d);log.scrollTop=1e9;return d}
+async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...b,session})});return r.json()}
+function show(r){session=r.session||session;if(r.error)return add('Error: '+r.error);if(r.result)add('Result: '+JSON.stringify(r.result,null,1));
+ if(r.kind==='reply')add(r.text);if(r.kind==='confirm'){const d=document.createElement('div');d.className='m c';d.textContent='Confirm: '+r.summary+' ';
+ for(const [l,v] of [['Approve',true],['Decline',false]]){const b=document.createElement('button');b.textContent=l;b.onclick=async()=>{d.querySelectorAll('button').forEach(x=>x.disabled=true);add('…');show(await post('/api/confirm',{approve:v}))};d.appendChild(b)}log.appendChild(d)}}
+async function send(){const t=inp.value.trim();if(!t)return;inp.value='';add(t,'u');add('…');show(await post('/api/chat',{message:t}))}
+document.getElementById('s').onclick=send;inp.onkeydown=e=>{if(e.key==='Enter')send()};
+</script></body></html>
