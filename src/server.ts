@@ -35,5 +35,5 @@ app.post("/api/confirm", async (req, res) => {
 app.get("/api/invoices", async (_q, r) => { try { r.json(await listInvoices()); } catch (e: any) { r.status(500).json({ error: e.message }); } });
 app.get("/api/cashflow", async (_q, r) => { try { r.json(await cashflow()); } catch (e: any) { r.status(500).json({ error: e.message }); } });
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => console.log(`HermesPay on http://localhost:${port}`, agentMode()));
+app.listen(port, () => console.log(`Hermes Invoice Agent on http://localhost:${port}`, agentMode()));
 startPolling();
