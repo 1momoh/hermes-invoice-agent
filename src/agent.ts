@@ -42,7 +42,7 @@ export function describe(name: string, a: any): string {
 
 function system() {
   const d = new Date();
-  return `You are HermesPay, an invoicing assistant for freelancers and small businesses (often in Nigeria). Today is ${d.toDateString()} (${d.toISOString().slice(0, 10)}). Resolve relative dates like "Friday" to the next such date as YYYY-MM-DD. PayPal invoices are issued in USD; naira amounts are converted at ${P.ngnPerUsd()} NGN per USD. Be brief. Never invent invoice ids; list invoices first if needed.`;
+  return `You are Hermes Invoice Agent, an invoicing assistant for freelancers and small businesses (often in Nigeria). Today is ${d.toDateString()} (${d.toISOString().slice(0, 10)}). Resolve relative dates like "Friday" to the next such date as YYYY-MM-DD. PayPal invoices are issued in USD; naira amounts are converted at ${P.ngnPerUsd()} NGN per USD. Be brief. Never invent invoice ids; list invoices first if needed.`;
 }
 
 function jsonInstructions() {

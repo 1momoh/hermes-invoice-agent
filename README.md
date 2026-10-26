@@ -1,7 +1,7 @@
-# HermesPay
+# Hermes Invoice Agent
 
 Chat-first invoicing agent for freelancers and small businesses. Type
-`bill tunde@example.com 50k naira for logo design due Friday` and HermesPay drafts a PayPal invoice,
+`bill tunde@example.com 50k naira for logo design due Friday` and Hermes Invoice Agent drafts a PayPal invoice,
 shows a confirmation card, and on approval creates and emails it via the PayPal Invoicing v2 API.
 
 ## Features
