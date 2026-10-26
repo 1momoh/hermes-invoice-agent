@@ -28,7 +28,9 @@ shows a confirmation card, and on approval creates and emails it via the PayPal 
 ## Dashboard
 `/dashboard` is an AG Grid Community table of invoices (status, USD, NGN, due date, overdue rows highlighted) with Paid / Outstanding / Overdue cards, updated live over SSE.
 
-![dashboard](docs/dashboard.png)
+![Dashboard](docs/dashboard.png)
+
+![Chat](docs/chat.png)
 
 ## API
 - `POST /api/chat {message, session?}` returns a reply or a `confirm` step
