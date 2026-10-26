@@ -18,6 +18,18 @@ shows a confirmation card, and on approval creates and emails it via the PayPal 
    Or use e.g. `LLM_BASE_URL=https://api.deepseek.com/v1 LLM_MODEL=deepseek-chat AGENT_MODE=tools`.
 5. `npm run dev` and open http://localhost:3000
 
+## Payment updates
+- **Polling fallback (default):** every `POLL_MINUTES` the server re-reads invoices and pushes changes ("Tunde just paid $33.33") to the chat and dashboard over SSE (`GET /api/events`). `POST /api/poll` forces a check.
+- **Webhooks:** `POST /api/paypal/webhook` verifies every event with `POST /v1/notifications/verify-webhook-signature` using `PAYPAL_WEBHOOK_ID`. Handles `INVOICING.INVOICE.PAID/CANCELLED/REFUNDED/UPDATED/CREATED/SCHEDULED` and payout item events.
+  Registration happens once you have a public HTTPS URL (e.g. after deploying):
+  `PUBLIC_URL=https://your-app.example npx tsx scripts/register-webhook.ts`, then set `PAYPAL_WEBHOOK_ID` and restart.
+- **Local simulation:** `WEBHOOK_DEV_SKIP_VERIFY=1` (never in production) lets you POST a sample event to the local endpoint.
+
+## Dashboard
+`/dashboard` is an AG Grid Community table of invoices (status, USD, NGN, due date, overdue rows highlighted) with Paid / Outstanding / Overdue cards, updated live over SSE.
+
+![dashboard](docs/dashboard.png)
+
 ## API
 - `POST /api/chat {message, session?}` returns a reply or a `confirm` step
 - `POST /api/confirm {session, approve}` executes or declines the pending action
