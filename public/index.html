@@ -1,16 +1,60 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermes Invoice Agent</title>
-<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;padding:16px}#log{border:1px solid #ccc;border-radius:8px;height:60vh;overflow:auto;padding:12px}
-.m{margin:8px 0;white-space:pre-wrap}.u{text-align:right}.u span{background:#e8f0fe}.m span{display:inline-block;padding:8px 12px;border-radius:12px;background:#f3f3f3}
-.c{border:1px solid #f0b400;border-radius:8px;padding:10px;background:#fff8e1}button{margin:4px;padding:6px 12px}#f{display:flex;gap:8px;margin-top:8px}#f input{flex:1;padding:10px}</style></head>
-<body><h2>Hermes Invoice Agent <small style="font-size:14px"><a href="/dashboard">Dashboard</a></small></h2><div id="log"></div><div id="f"><input id="i" placeholder="bill tunde@example.com 50k naira for logo design due Friday"><button id="s">Send</button></div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermes Invoice Agent</title>
+<link rel="stylesheet" href="/styles.css"><style>
+.grid{display:grid;grid-template-columns:1fr 300px;gap:20px;padding:28px 0 32px}@media(max-width:860px){.grid{grid-template-columns:1fr}aside{display:none}}
+.chat{display:flex;flex-direction:column;height:calc(100vh - 200px);min-height:480px;overflow:hidden}
+#log{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.m{display:flex;gap:10px;max-width:84%;animation:in .28s cubic-bezier(.2,.8,.2,1)}@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.m .b{padding:10px 14px;border-radius:14px;white-space:pre-wrap;background:var(--panel2);border:1px solid var(--line)}
+.m.u{align-self:flex-end}.m.u .b{background:var(--accent);border-color:transparent;color:#fff;border-bottom-right-radius:4px}
+.m.a .b{border-bottom-left-radius:4px}.av{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font:700 11px var(--mono);background:var(--panel2);border:1px solid var(--line2);color:var(--accent2)}
+.m.n .b{border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.07)}.m.e .b{border-color:rgba(248,113,113,.3);color:#fecaca}
+.res{font:12px/1.5 var(--mono);color:var(--mute);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;max-height:180px;overflow:auto}
+.card{border:1px solid rgba(251,191,36,.35);background:linear-gradient(180deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border-radius:14px;padding:14px 16px;max-width:84%;animation:in .28s}
+.card .t{font:500 11px var(--mono);letter-spacing:.1em;color:var(--warn);text-transform:uppercase}.card p{margin:6px 0 12px}.card .row{display:flex;gap:8px}
+.typing .b{display:flex;gap:4px;padding:14px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:bl 1.2s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.25;transform:none}40%{opacity:1;transform:translateY(-3px)}}
+.composer{border-top:1px solid var(--line);padding:14px;display:flex;gap:10px;background:rgba(0,0,0,.15)}
+.composer input{flex:1;background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:11px 14px;color:var(--text);font:14px var(--sans);outline:none;transition:border-color .15s,box-shadow .15s}
+.composer input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(61,139,255,.18)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 12px}.chip{font-size:12px;padding:6px 11px;border-radius:999px;border:1px solid var(--line2);color:var(--mute);background:transparent;cursor:pointer;transition:.15s}.chip:hover{color:var(--text);border-color:var(--accent)}
+aside .panel{padding:18px;margin-bottom:16px}aside h3{margin:0 0 10px;font-size:13px;font-weight:600}aside ol{margin:0;padding-left:18px;color:var(--mute);font-size:13px}aside li{margin:6px 0}
+svg .flow{stroke-dasharray:4 6;animation:dash 1.4s linear infinite}@keyframes dash{to{stroke-dashoffset:-20}}
+</style></head><body><div class="wrap">
+<nav><a class="brand" href="/"><span class="logo">H</span>Hermes Invoice Agent</a><span class="live"><span class="dot"></span>PayPal sandbox</span>
+<div class="tabs"><a class="on" href="/">Agent</a><a href="/dashboard">Dashboard</a></div></nav>
+<div class="grid"><section>
+<div class="eyebrow">AI invoicing · PayPal</div><h1>Bill clients in plain language.</h1><p class="sub" style="margin-bottom:18px">Create, send and chase PayPal invoices in naira or dollars. Every action that sends money or email waits for your approval.</p>
+<div class="panel chat"><div id="log"></div>
+<div class="chips" id="chips"><button class="chip">Bill tunde@example.com ₦50k for logo design, due Friday</button><button class="chip">Who still owes me?</button><button class="chip">Remind overdue clients</button><button class="chip">Cashflow this month</button></div>
+<div class="composer"><input id="i" placeholder="Bill ada@example.com ₦15,000 for a website audit…" autocomplete="off"><button class="btn primary" id="s">Send</button></div></div>
+</section><aside>
+<div class="panel"><svg viewBox="0 0 260 120" width="100%" aria-hidden="true">
+<g fill="none" stroke-width="1.2"><rect x="8" y="34" width="62" height="52" rx="10" stroke="rgba(255,255,255,.18)" fill="#131922"/><rect x="99" y="34" width="62" height="52" rx="10" stroke="#3d8bff" fill="rgba(61,139,255,.1)"/><rect x="190" y="34" width="62" height="52" rx="10" stroke="#34d399" fill="rgba(52,211,153,.08)"/>
+<path class="flow" d="M70 60h29M161 60h29" stroke="#7cc4ff"/></g>
+<g font-family="ui-monospace,monospace" font-size="9" text-anchor="middle" fill="#8b95a5"><text x="39" y="64">"bill ₦50k"</text><text x="130" y="64" fill="#7cc4ff">INVOICE</text><text x="221" y="64" fill="#34d399">PAID ✓</text>
+<text x="39" y="104">you ask</text><text x="130" y="104">agent sends</text><text x="221" y="104">client pays</text></g></svg></div>
+<div class="panel"><h3>How it works</h3><ol><li>Describe the invoice in plain words.</li><li>Review the confirm card, then approve.</li><li>PayPal emails the client a pay link.</li><li>Get a live ping the moment it's paid.</li></ol></div>
+</aside></div></div><div class="toast" id="toast"><span class="dot"></span><span id="tt"></span></div>
 <script>
 let session=null;const log=document.getElementById('log'),inp=document.getElementById('i');
-function add(t,c){const d=document.createElement('div');d.className='m '+(c||'');const s=document.createElement('span');s.textContent=t;d.appendChild(s);log.appendChild(d);log.scrollTop=1e9;return d}
+function add(t,c,extra){const d=document.createElement('div');d.className='m '+(c||'a');if(c!=='u'){const a=document.createElement('div');a.className='av';a.textContent=c==='n'?'$':'H';d.appendChild(a)}
+ const b=document.createElement('div');b.className='b';b.textContent=t;if(extra){const r=document.createElement('div');r.className='res';r.textContent=extra;b.appendChild(r)}d.appendChild(b);log.appendChild(d);log.scrollTop=1e9;return d}
+function typing(){const d=add('', 'a typing');d.querySelector('.b').innerHTML='<i></i><i></i><i></i>';return d}
 async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...b,session})});return r.json()}
-function show(r){session=r.session||session;if(r.error)return add('Error: '+r.error);if(r.result)add('Result: '+JSON.stringify(r.result,null,1));
- if(r.kind==='reply')add(r.text);if(r.kind==='confirm'){const d=document.createElement('div');d.className='m c';d.textContent='Confirm: '+r.summary+' ';
- for(const [l,v] of [['Approve',true],['Decline',false]]){const b=document.createElement('button');b.textContent=l;b.onclick=async()=>{d.querySelectorAll('button').forEach(x=>x.disabled=true);add('…');show(await post('/api/confirm',{approve:v}))};d.appendChild(b)}log.appendChild(d)}}
-async function send(){const t=inp.value.trim();if(!t)return;inp.value='';add(t,'u');add('…');show(await post('/api/chat',{message:t}))}
-document.getElementById('s').onclick=send;
-const es=new EventSource('/api/events');for(const t of ['invoice','event'])es.addEventListener(t,e=>{const d=add('🔔 '+JSON.parse(e.data).text);d.querySelector('span').style.background='#e6f4ea'});inp.onkeydown=e=>{if(e.key==='Enter')send()};
+function confirmCard(summary,demo){const d=document.createElement('div');d.className='card';d.innerHTML='<div class="t">Needs your approval</div>';const p=document.createElement('p');p.textContent=summary;d.appendChild(p);
+ const row=document.createElement('div');row.className='row';for(const [l,v,c] of [['Approve & send',true,'btn primary'],['Decline',false,'btn']]){const b=document.createElement('button');b.className=c;b.textContent=l;
+ b.onclick=async()=>{if(demo)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);const t=typing();const r=await post('/api/confirm',{approve:v});t.remove();show(r)};row.appendChild(b)}d.appendChild(row);log.appendChild(d);log.scrollTop=1e9}
+function show(r){session=r.session||session;if(r.error)return add('Error: '+r.error,'e');if(r.result)add('Done.','a',JSON.stringify(r.result,null,1));if(r.kind==='reply')add(r.text);if(r.kind==='confirm')confirmCard(r.summary)}
+async function send(t){t=(t||inp.value).trim();if(!t)return;inp.value='';add(t,'u');document.getElementById('chips').style.display='none';const ty=typing();let r;try{r=await post('/api/chat',{message:t})}catch(e){r={error:e.message}}ty.remove();show(r)}
+document.getElementById('s').onclick=()=>send();inp.onkeydown=e=>{if(e.key==='Enter')send()};document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>send(c.textContent));
+function toast(t){const el=document.getElementById('toast');document.getElementById('tt').textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),7000)}
+const q=location.search;
+if(q.includes('demo')){document.getElementById('chips').style.display='none';
+ add('Bill tunde@example.com ₦50,000 for logo design, due Friday','u');
+ add('I’ll create a PayPal invoice for Tunde: $33.33 (₦50,000 at 1,500 NGN/USD), “Logo design”, due Fri 30 Oct.');
+ confirmCard('Send invoice to tunde@example.com · $33.33 (₦50,000) · Logo design · due 2026-10-30',true);
+ add('Invoice INV2-7V9F-4NG6-NMKV-PXW7 sent. Tunde has a PayPal pay link in his inbox.');
+ add('Tunde just paid $33.33 (₦50,000) 🎉','n');add('Who still owes me?','u');typing()}
+else{add('Hi! Tell me who to bill, how much and for what. I’ll draft the PayPal invoice and wait for your OK before sending.');
+ if(!q.includes('nolive')){const es=new EventSource('/api/events');for(const t of ['invoice','event'])es.addEventListener(t,e=>{const x=JSON.parse(e.data).text;add(x,'n');toast(x)})}}
 </script></body></html>

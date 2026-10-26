@@ -1,31 +1,48 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermes Invoice Agent dashboard</title>
-<script src="/vendor/ag-grid/ag-grid-community.min.js"></script>
-<style>body{font-family:system-ui,sans-serif;margin:0 auto;max-width:1200px;padding:16px}.cards{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
-.card{flex:1;min-width:160px;border:1px solid #ddd;border-radius:10px;padding:12px}.card b{display:block;font-size:24px;margin-top:4px}.card small{color:#666}
-#grid{height:480px}.overdue{background:#fdecea!important}.pill{padding:2px 8px;border-radius:10px;font-size:12px}
-.PAID,.MARKED_AS_PAID{background:#e6f4ea;color:#137333}.SENT,.UNPAID{background:#e8f0fe;color:#1a56c4}.CANCELLED{background:#eee;color:#555}.OVERDUE{background:#fce8e6;color:#c5221f}
-#toast{position:fixed;right:16px;bottom:16px;background:#137333;color:#fff;padding:10px 14px;border-radius:8px;display:none}</style></head>
-<body><h2>Hermes Invoice Agent dashboard <small style="font-size:14px"><a href="/">Chat</a> · <span id="upd"></span></small></h2>
-<div class="cards"><div class="card"><small>Paid</small><b id="paid">-</b><small id="paidn"></small></div><div class="card"><small>Outstanding</small><b id="out">-</b><small id="outn"></small></div>
-<div class="card"><small>Overdue</small><b id="od">-</b><small id="odn"></small></div><div class="card"><small>Invoices</small><b id="cnt">-</b><small id="rate"></small></div></div>
-<div id="grid"></div><div id="toast"></div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermes Invoice Agent · Dashboard</title>
+<link rel="stylesheet" href="/styles.css"><script src="/vendor/ag-grid/ag-grid-community.min.js"></script><style>
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:28px 0 20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}@media(max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{padding:16px 18px;transition:transform .15s,border-color .15s}.kpi:hover{transform:translateY(-2px);border-color:var(--line2)}
+.kpi .l{display:flex;align-items:center;gap:8px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.kpi .l i{width:8px;height:8px;border-radius:2px}.kpi .v{font-size:26px;font-weight:600;margin:8px 0 2px}.kpi .s{color:var(--dim);font:12px var(--mono)}
+.bar{height:4px;border-radius:4px;background:rgba(255,255,255,.05);margin-top:12px;overflow:hidden}.bar b{display:block;height:100%;width:0;border-radius:4px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.tablep{padding:6px}#grid{height:440px}.meta{font:12px var(--mono);color:var(--dim)}
+.ag-row.overdue{background:rgba(248,113,113,.05)!important}
+</style></head><body><div class="wrap">
+<nav><a class="brand" href="/"><span class="logo">H</span>Hermes Invoice Agent</a><span class="live"><span class="dot"></span><span id="upd">live</span></span>
+<div class="tabs"><a href="/">Agent</a><a class="on" href="/dashboard">Dashboard</a></div></nav>
+<div class="head"><div><div class="eyebrow">Cashflow</div><h1>Receivables overview</h1><p class="sub">Every invoice the agent has sent through PayPal. Updates live on payment.</p></div><span class="meta" id="rate"></span></div>
+<div class="kpis">
+<div class="panel kpi"><div class="l"><i style="background:var(--ok)"></i>Paid</div><div class="v num" id="paid">–</div><div class="s" id="paidn"></div><div class="bar"><b id="bp" style="background:var(--ok)"></b></div></div>
+<div class="panel kpi"><div class="l"><i style="background:var(--accent)"></i>Outstanding</div><div class="v num" id="out">–</div><div class="s" id="outn"></div><div class="bar"><b id="bo" style="background:var(--accent)"></b></div></div>
+<div class="panel kpi"><div class="l"><i style="background:var(--bad)"></i>Overdue</div><div class="v num" id="od">–</div><div class="s" id="odn"></div><div class="bar"><b id="bd" style="background:var(--bad)"></b></div></div>
+<div class="panel kpi"><div class="l"><i style="background:var(--mute)"></i>Invoices</div><div class="v num" id="cnt">–</div><div class="s" id="cntn"></div><div class="bar"><b id="bc" style="background:var(--mute)"></b></div></div></div>
+<div class="panel tablep"><div id="grid"></div></div><p class="meta" style="margin:14px 2px 32px">Amounts are invoiced in USD (PayPal doesn't support NGN invoices); naira shown at the configured rate.</p>
+</div><div class="toast" id="toast"><span class="dot"></span><span id="tt"></span></div>
 <script>
 let rate=1500;const today=new Date().toISOString().slice(0,10);
 const open=s=>['SENT','UNPAID','PARTIALLY_PAID','SCHEDULED'].includes(s);
 const isOverdue=r=>open(r.status)&&r.due&&r.due<today;
-const usd=v=>'$'+Number(v||0).toFixed(2), ngn=v=>'₦'+Math.round(Number(v||0)*rate).toLocaleString();
-const api=agGrid.createGrid(document.getElementById('grid'),{
- columnDefs:[{field:'number',headerName:'#',width:90},{field:'recipient',headerName:'Client',flex:1},
-  {field:'status',width:150,cellRenderer:p=>{const s=isOverdue(p.data)?'OVERDUE':p.value;return `<span class="pill ${s}">${s}</span>`}},
-  {field:'amount',headerName:'USD',width:120,type:'rightAligned',valueFormatter:p=>usd(p.value)},
-  {headerName:'NGN',width:140,type:'rightAligned',valueGetter:p=>Number(p.data.amount||0)*rate,valueFormatter:p=>'₦'+Math.round(p.value).toLocaleString()},
-  {field:'due',headerName:'Due',width:130,sort:'asc'},{field:'id',headerName:'Invoice ID',width:250}],
+const usd=v=>'$'+Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}), ngn=v=>'₦'+Math.round(Number(v||0)*rate).toLocaleString();
+const theme=agGrid.themeQuartz.withParams({backgroundColor:'transparent',foregroundColor:'#e8ecf2',headerBackgroundColor:'transparent',headerTextColor:'#8b95a5',
+ borderColor:'rgba(255,255,255,.07)',rowHoverColor:'rgba(61,139,255,.06)',accentColor:'#3d8bff',fontFamily:'Inter,ui-sans-serif,-apple-system,Segoe UI,sans-serif',fontSize:13,headerFontSize:11,
+ headerFontWeight:500,rowHeight:48,headerHeight:40,wrapperBorder:false,oddRowBackgroundColor:'transparent',spacing:7,chromeBackgroundColor:'transparent'});
+const api=agGrid.createGrid(document.getElementById('grid'),{theme,
+ columnDefs:[{field:'number',headerName:'NO.',width:90,cellClass:'num'},{field:'recipient',headerName:'CLIENT',flex:1,minWidth:160},
+  {field:'status',headerName:'STATUS',width:160,cellRenderer:p=>{const s=isOverdue(p.data)?'OVERDUE':p.value;return `<span class="pill ${s}">${s.replace(/_/g,' ')}</span>`}},
+  {field:'amount',headerName:'USD',width:120,type:'rightAligned',cellClass:'num',valueFormatter:p=>usd(p.value)},
+  {headerName:'NGN',width:140,type:'rightAligned',cellClass:'num',valueGetter:p=>Number(p.data.amount||0)*rate,valueFormatter:p=>'₦'+Math.round(p.value).toLocaleString()},
+  {field:'due',headerName:'DUE',width:130,sort:'asc',cellClass:'num'},{field:'id',headerName:'INVOICE ID',width:250,cellStyle:{color:'#5b6575',fontFamily:'ui-monospace,monospace',fontSize:'12px'}}],
  defaultColDef:{sortable:true,filter:true,resizable:true},getRowId:p=>p.data.id,rowClassRules:{overdue:p=>isOverdue(p.data)},rowData:[]});
+function count(el,to,fmt){const from=0,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/700),e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)requestAnimationFrame(f)})(t0);el.textContent=fmt(to)}
 function render(rows){api.setGridOption('rowData',rows);const s=f=>rows.filter(f).reduce((a,x)=>a+Number(x.amount||0),0);
- const P=s(r=>r.status==='PAID'||r.status==='MARKED_AS_PAID'),O=s(r=>open(r.status)),D=s(isOverdue);
- paid.textContent=usd(P);paidn.textContent=ngn(P);out.textContent=usd(O);outn.textContent=ngn(O);od.textContent=usd(D);odn.textContent=ngn(D);
- cnt.textContent=rows.length;document.getElementById('rate').textContent=rate+' NGN/USD';upd.textContent='updated '+new Date().toLocaleTimeString()}
+ const P=s(r=>r.status==='PAID'||r.status==='MARKED_AS_PAID'),O=s(r=>open(r.status)),D=s(isOverdue),T=Math.max(P+O,1);
+ count(paid,P,usd);count(out,O,usd);count(od,D,usd);count(cnt,rows.length,v=>Math.round(v));
+ paidn.textContent=ngn(P);outn.textContent=ngn(O);odn.textContent=ngn(D);cntn.textContent=rows.filter(r=>open(r.status)).length+' open';
+ bp.style.width=P/T*100+'%';bo.style.width=O/T*100+'%';bd.style.width=D/T*100+'%';bc.style.width='100%';
+ document.getElementById('rate').textContent='1 USD = ₦'+rate.toLocaleString();upd.textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
 async function load(){const c=await (await fetch('/api/cashflow')).json();rate=c.ngn_per_usd||rate;render(await (await fetch('/api/invoices')).json())}
+function toast(t){const el=document.getElementById('toast');document.getElementById('tt').textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),7000)}
 load();if(!location.search.includes('nolive')){const es=new EventSource('/api/events');es.addEventListener('invoices',e=>render(JSON.parse(e.data)));
-es.addEventListener('invoice',e=>{const t=document.getElementById('toast');t.textContent=JSON.parse(e.data).text;t.style.display='block';setTimeout(()=>t.style.display='none',8000);load()})}
+es.addEventListener('invoice',e=>{toast(JSON.parse(e.data).text);load()})}
 </script></body></html>

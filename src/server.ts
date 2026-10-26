@@ -9,6 +9,7 @@ const app = express();
 app.use(express.json({ verify: (req: any, _res, buf) => { req.rawBody = buf.toString("utf8"); } }));
 app.use("/vendor/ag-grid", express.static("node_modules/ag-grid-community/dist"));
 app.get("/dashboard", (_q, r) => r.sendFile("dashboard.html", { root: "public" }));
+app.get("/api/health", (_q, r) => r.json({ ok: true, service: "hermes-invoice-agent", paypal_configured: !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET), llm_base_url_set: !!process.env.LLM_BASE_URL, time: new Date().toISOString() }));
 app.get("/api/events", sse);
 app.post("/api/paypal/webhook", webhook);
 app.post("/api/poll", async (_q, r) => { try { r.json(await pollOnce()); } catch (e: any) { r.status(500).json({ error: e.message }); } });
