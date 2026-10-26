@@ -34,17 +34,19 @@ export async function pp(method: string, path: string, body?: unknown): Promise<
   return data;
 }
 
-export const ngnPerUsd = () => Number(process.env.NGN_PER_USD || "1500");
+import * as FX from "./fx.js";
+export const ngnPerUsd = () => FX.rate("NGN").rate;
 
-export interface InvoiceInput { recipient_email: string; recipient_name?: string; description: string; amount: number; currency: "USD" | "NGN"; due_date: string; note?: string; }
+export interface InvoiceInput { recipient_email: string; recipient_name?: string; description: string; amount: number; currency: string; due_date: string; note?: string; }
 
 export function toUsd(i: InvoiceInput) {
-  return i.currency === "NGN" ? Math.round((i.amount / ngnPerUsd()) * 100) / 100 : i.amount;
+  return FX.convert(i.amount, i.currency).usd;
 }
 
 export async function createAndSendInvoice(i: InvoiceInput) {
-  const usd = toUsd(i).toFixed(2);
-  const ngnNote = i.currency === "NGN" ? `Original amount: NGN ${i.amount.toLocaleString()} at ${ngnPerUsd()} NGN/USD.` : "";
+  await FX.refresh();
+  const fx = FX.convert(i.amount, i.currency), usd = fx.usd.toFixed(2);
+  const ngnNote = FX.isLocal(i.currency) ? `Billed as ${i.currency} ${i.amount.toLocaleString()} at ${fx.rate} ${i.currency}/USD (${fx.source} rate). PayPal settles in USD.` : "";
   const draft = await pp("POST", "/v2/invoicing/invoices", {
     detail: { currency_code: "USD", note: [i.note, ngnNote].filter(Boolean).join(" ") || undefined, payment_term: { due_date: i.due_date } },
     primary_recipients: [{ billing_info: { email_address: i.recipient_email, ...(i.recipient_name ? { name: { given_name: i.recipient_name } } : {}) } }],
@@ -54,7 +56,7 @@ export async function createAndSendInvoice(i: InvoiceInput) {
   await pp("POST", `/v2/invoicing/invoices/${id}/send`, { send_to_recipient: true });
   const inv = await pp("GET", `/v2/invoicing/invoices/${id}`);
   return { id, status: inv.status, amount_usd: usd, due_date: i.due_date, recipient: i.recipient_email,
-    pay_link: inv.detail?.metadata?.recipient_view_url };
+    pay_link: inv.detail?.metadata?.recipient_view_url, fx };
 }
 
 export async function listInvoices(status?: string) {

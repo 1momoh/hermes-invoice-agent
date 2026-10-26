@@ -1,60 +1,122 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermes Invoice Agent</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hermes · Bill in your currency, get paid through PayPal</title>
+<meta name="description" content="Text Hermes who owes you. It drafts a PayPal invoice in your currency, converts it to US dollars at today's rate, and sends it once you sign.">
+<meta property="og:title" content="Hermes Invoice Agent"><meta property="og:description" content="Bill in your currency. Get paid through PayPal."><meta property="og:image" content="/og.png"><meta name="theme-color" content="#f3eee4">
+<link rel="icon" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/styles.css"><style>
-.grid{display:grid;grid-template-columns:1fr 300px;gap:20px;padding:28px 0 32px}@media(max-width:860px){.grid{grid-template-columns:1fr}aside{display:none}}
-.chat{display:flex;flex-direction:column;height:calc(100vh - 200px);min-height:480px;overflow:hidden}
-#log{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
-.m{display:flex;gap:10px;max-width:84%;animation:in .28s cubic-bezier(.2,.8,.2,1)}@keyframes in{from{opacity:0;transform:translateY(6px)}}
-.m .b{padding:10px 14px;border-radius:14px;white-space:pre-wrap;background:var(--panel2);border:1px solid var(--line)}
-.m.u{align-self:flex-end}.m.u .b{background:var(--accent);border-color:transparent;color:#fff;border-bottom-right-radius:4px}
-.m.a .b{border-bottom-left-radius:4px}.av{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font:700 11px var(--mono);background:var(--panel2);border:1px solid var(--line2);color:var(--accent2)}
-.m.n .b{border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.07)}.m.e .b{border-color:rgba(248,113,113,.3);color:#fecaca}
-.res{font:12px/1.5 var(--mono);color:var(--mute);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;max-height:180px;overflow:auto}
-.card{border:1px solid rgba(251,191,36,.35);background:linear-gradient(180deg,rgba(251,191,36,.08),rgba(251,191,36,.02));border-radius:14px;padding:14px 16px;max-width:84%;animation:in .28s}
-.card .t{font:500 11px var(--mono);letter-spacing:.1em;color:var(--warn);text-transform:uppercase}.card p{margin:6px 0 12px}.card .row{display:flex;gap:8px}
-.typing .b{display:flex;gap:4px;padding:14px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:bl 1.2s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
-@keyframes bl{0%,80%,100%{opacity:.25;transform:none}40%{opacity:1;transform:translateY(-3px)}}
-.composer{border-top:1px solid var(--line);padding:14px;display:flex;gap:10px;background:rgba(0,0,0,.15)}
-.composer input{flex:1;background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:11px 14px;color:var(--text);font:14px var(--sans);outline:none;transition:border-color .15s,box-shadow .15s}
-.composer input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(61,139,255,.18)}
-.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 12px}.chip{font-size:12px;padding:6px 11px;border-radius:999px;border:1px solid var(--line2);color:var(--mute);background:transparent;cursor:pointer;transition:.15s}.chip:hover{color:var(--text);border-color:var(--accent)}
-aside .panel{padding:18px;margin-bottom:16px}aside h3{margin:0 0 10px;font-size:13px;font-weight:600}aside ol{margin:0;padding-left:18px;color:var(--mute);font-size:13px}aside li{margin:6px 0}
-svg .flow{stroke-dasharray:4 6;animation:dash 1.4s linear infinite}@keyframes dash{to{stroke-dashoffset:-20}}
-</style></head><body><div class="wrap">
-<nav><a class="brand" href="/"><span class="logo">H</span>Hermes Invoice Agent</a><span class="live"><span class="dot"></span>PayPal sandbox</span>
-<div class="tabs"><a class="on" href="/">Agent</a><a href="/dashboard">Dashboard</a></div></nav>
-<div class="grid"><section>
-<div class="eyebrow">AI invoicing · PayPal</div><h1>Bill clients in plain language.</h1><p class="sub" style="margin-bottom:18px">Create, send and chase PayPal invoices in naira or dollars. Every action that sends money or email waits for your approval.</p>
-<div class="panel chat"><div id="log"></div>
-<div class="chips" id="chips"><button class="chip">Bill tunde@example.com ₦50k for logo design, due Friday</button><button class="chip">Who still owes me?</button><button class="chip">Remind overdue clients</button><button class="chip">Cashflow this month</button></div>
-<div class="composer"><input id="i" placeholder="Bill ada@example.com ₦15,000 for a website audit…" autocomplete="off"><button class="btn primary" id="s">Send</button></div></div>
-</section><aside>
-<div class="panel"><svg viewBox="0 0 260 120" width="100%" aria-hidden="true">
-<g fill="none" stroke-width="1.2"><rect x="8" y="34" width="62" height="52" rx="10" stroke="rgba(255,255,255,.18)" fill="#131922"/><rect x="99" y="34" width="62" height="52" rx="10" stroke="#3d8bff" fill="rgba(61,139,255,.1)"/><rect x="190" y="34" width="62" height="52" rx="10" stroke="#34d399" fill="rgba(52,211,153,.08)"/>
-<path class="flow" d="M70 60h29M161 60h29" stroke="#7cc4ff"/></g>
-<g font-family="ui-monospace,monospace" font-size="9" text-anchor="middle" fill="#8b95a5"><text x="39" y="64">"bill ₦50k"</text><text x="130" y="64" fill="#7cc4ff">INVOICE</text><text x="221" y="64" fill="#34d399">PAID ✓</text>
-<text x="39" y="104">you ask</text><text x="130" y="104">agent sends</text><text x="221" y="104">client pays</text></g></svg></div>
-<div class="panel"><h3>How it works</h3><ol><li>Describe the invoice in plain words.</li><li>Review the confirm card, then approve.</li><li>PayPal emails the client a pay link.</li><li>Get a live ping the moment it's paid.</li></ol></div>
-</aside></div></div><div class="toast" id="toast"><span class="dot"></span><span id="tt"></span></div>
-<script>
-let session=null;const log=document.getElementById('log'),inp=document.getElementById('i');
-function add(t,c,extra){const d=document.createElement('div');d.className='m '+(c||'a');if(c!=='u'){const a=document.createElement('div');a.className='av';a.textContent=c==='n'?'$':'H';d.appendChild(a)}
- const b=document.createElement('div');b.className='b';b.textContent=t;if(extra){const r=document.createElement('div');r.className='res';r.textContent=extra;b.appendChild(r)}d.appendChild(b);log.appendChild(d);log.scrollTop=1e9;return d}
-function typing(){const d=add('', 'a typing');d.querySelector('.b').innerHTML='<i></i><i></i><i></i>';return d}
-async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...b,session})});return r.json()}
-function confirmCard(summary,demo){const d=document.createElement('div');d.className='card';d.innerHTML='<div class="t">Needs your approval</div>';const p=document.createElement('p');p.textContent=summary;d.appendChild(p);
- const row=document.createElement('div');row.className='row';for(const [l,v,c] of [['Approve & send',true,'btn primary'],['Decline',false,'btn']]){const b=document.createElement('button');b.className=c;b.textContent=l;
- b.onclick=async()=>{if(demo)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);const t=typing();const r=await post('/api/confirm',{approve:v});t.remove();show(r)};row.appendChild(b)}d.appendChild(row);log.appendChild(d);log.scrollTop=1e9}
-function show(r){session=r.session||session;if(r.error)return add('Error: '+r.error,'e');if(r.result)add('Done.','a',JSON.stringify(r.result,null,1));if(r.kind==='reply')add(r.text);if(r.kind==='confirm')confirmCard(r.summary)}
-async function send(t){t=(t||inp.value).trim();if(!t)return;inp.value='';add(t,'u');document.getElementById('chips').style.display='none';const ty=typing();let r;try{r=await post('/api/chat',{message:t})}catch(e){r={error:e.message}}ty.remove();show(r)}
-document.getElementById('s').onclick=()=>send();inp.onkeydown=e=>{if(e.key==='Enter')send()};document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>send(c.textContent));
-function toast(t){const el=document.getElementById('toast');document.getElementById('tt').textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),7000)}
-const q=location.search;
-if(q.includes('demo')){document.getElementById('chips').style.display='none';
+.layout{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:48px;padding:48px 0 64px;align-items:start}
+.intro{margin-bottom:32px}
+.chat{background:var(--sheet);border:1px solid var(--ink);border-radius:12px;display:flex;flex-direction:column;height:min(720px,calc(100dvh - 160px));min-height:520px;overflow:hidden}
+.chathead{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--rule)}
+.av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--sheet);display:grid;place-items:center;font:600 16px var(--serif);flex:none}
+.chathead b{display:block;font:600 16px/24px var(--serif)}.chathead span{display:block;font:12px/16px var(--mono);color:var(--ink3)}
+#log{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.m{max-width:85%;width:fit-content;animation:in .5s var(--ease) both}.m.u{align-self:flex-end}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.b{padding:8px 16px;border-radius:16px 16px 16px 4px;background:var(--paper);white-space:pre-wrap;overflow-wrap:anywhere}
+.u .b{background:var(--ink);color:var(--sheet);border-radius:16px 16px 4px 16px}
+.e .b{background:var(--red-bg);color:var(--red);font:14px/20px var(--mono)}
+.e .b button{margin-top:8px}
+.m .receipt{width:360px;max-width:100%}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.typing .b{display:flex;gap:4px;padding:16px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink3);animation:pulse 1.2s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.chips{display:flex;gap:8px;padding:0 24px 16px;overflow-x:auto;scrollbar-width:none}
+.chip{flex:none;font:12px/16px var(--mono);padding:8px 12px;border:1px solid var(--rule);border-radius:999px;background:var(--sheet);cursor:pointer;color:var(--ink2);transition:border-color .3s var(--ease),color .3s var(--ease)}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.composer{display:flex;gap:8px;padding:16px 24px;border-top:1px solid var(--rule)}
+.composer input{flex:1;min-width:0;font:16px/24px var(--serif);padding:8px 12px;border:1px solid var(--rule);border-radius:var(--r);background:var(--sheet);color:var(--ink);transition:border-color .3s var(--ease)}
+.composer input:focus{border-color:var(--ink);outline:none}.composer input:focus-visible{outline:2px solid var(--red);outline-offset:1px}
+.why{font:12px/16px var(--mono);color:var(--ink3);margin:16px 0 0}
+aside{display:flex;flex-direction:column;gap:48px}
+.sec h2{font:600 12px/16px var(--mono);text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px}.sec p.hint{font-size:14px;line-height:20px;color:var(--ink2);margin:0 0 16px}
+.trace{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.trace li{display:grid;grid-template-columns:64px 1fr auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule);font:12px/16px var(--mono);animation:in .4s var(--ease) both}
+.trace .k{font-weight:600;color:var(--ink3)}.trace .k.guard{color:var(--red)}.trace .k.act{color:var(--green)}
+.trace .l{color:var(--ink);overflow-wrap:anywhere}.trace .d{display:block;color:var(--ink3);margin-top:4px}.trace .t{color:var(--ink3)}
+.trace .run{display:block;color:var(--ink3);padding-top:16px;border-bottom:0}
+.empty{font:14px/20px var(--serif);color:var(--ink2);padding:16px 0;border-top:1px solid var(--ink)}
+.recent{display:flex;flex-direction:column;gap:16px}.recent .receipt{padding:16px 24px}
+.recent .stamp{top:40px;font-size:12px;line-height:20px}
+@media (max-width:960px){.layout{grid-template-columns:minmax(0,1fr);gap:48px;padding:32px 0 48px}.chat{height:calc(100dvh - 96px)}}
+@media (max-width:720px){.intro{margin-bottom:24px}.chathead,.composer{padding:12px 16px}#log{padding:16px}.chips{padding:0 16px 12px}.m{max-width:92%}}
+</style></head><body>
+<a class="skip" href="#i">Skip to message box</a>
+<div class="wrap"><header class="top"><a class="brand" href="/">Hermes</a><span class="rate" id="rate" tabindex="0" role="note"></span>
+<nav class="tabs" aria-label="Main"><a href="/" aria-current="page">Chat</a><a href="/dashboard">Ledger</a></nav></header>
+<main class="layout"><section aria-labelledby="h">
+<div class="intro"><p class="eyebrow">Invoice agent for PayPal</p><h1 id="h">Bill in your currency.<br>Get paid through PayPal.</h1>
+<p class="sub">Text Hermes like you’d text your bookkeeper. It drafts the invoice, converts naira, shillings, cedis, rand or rupees to US dollars at today’s rate, and sends nothing until you sign.</p></div>
+<div class="chat"><div class="chathead"><div class="av" aria-hidden="true">H</div><div><b>Hermes</b><span>Bookkeeper · PayPal sandbox</span></div></div>
+<div id="log" role="log" aria-live="polite" aria-label="Conversation"></div>
+<div class="chips" id="chips" role="group" aria-label="Suggestions"><button class="chip">Bill tunde@example.com ₦50,000 for logo design, due Friday</button><button class="chip">Bill wanjiru@example.com KSh 12,000 for a site audit</button><button class="chip">Who still owes me?</button><button class="chip">Cashflow this month</button></div>
+<form class="composer" id="f"><label for="i" class="sr">Message Hermes</label><input id="i" placeholder="Bill ada@example.com ₦15,000 for a website audit" autocomplete="off" enterkeyhint="send"><button class="btn primary" id="s">Send</button></form></div>
+<p class="why">PayPal can’t issue invoices in NGN, KES, GHS, ZAR or INR. Hermes bills your client in your currency and settles in USD.</p>
+</section>
+<aside><section class="sec" aria-labelledby="tr"><h2 id="tr">Agent trace</h2><p class="hint">Every decision, tool call and approval gate, as it happens.</p><ol class="trace" id="trace" aria-live="polite"></ol></section>
+<section class="sec" aria-labelledby="rc"><h2 id="rc">Recent invoices</h2><p class="hint">Straight from PayPal, newest first.</p><div class="recent" id="recent"><div class="skel" style="height:112px"></div><div class="skel" style="height:112px"></div></div></section></aside>
+</main></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/common.js"></script><script>
+let session=null,lastFx=null,lastDesc='';const log=document.getElementById('log'),inp=document.getElementById('i'),q=location.search,demo=q.includes('demo');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const name=e=>(e||'').split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+function wrap(c){const d=document.createElement('div');d.className='m '+c;log.appendChild(d);requestAnimationFrame(()=>log.scrollTop=log.scrollHeight);return d}
+function add(t,c='a'){const d=wrap(c);d.innerHTML='<div class="b"></div>';d.firstChild.textContent=t;return d}
+function typing(){const d=wrap('a typing');d.setAttribute('aria-label','Hermes is typing');d.innerHTML='<div class="b"><i></i><i></i><i></i></div>';return d}
+function fxLine(f){if(!f||f.from==='USD')return '';const r=f.rate.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ return `<div class="fx"><b>${esc(H.money(f.amount,f.from))} → ${esc(H.money(f.usd))} USD</b><br>rate ${esc(f.symbol.trim())}${r}/$ · ${f.source==='live'?'live':'fixed'} · PayPal settles in USD</div>`}
+function receipt(o){return `<div class="receipt">${o.stamp?`<span class="stamp ${o.stamp==='PAID'?'paid':''}">${o.stamp}</span>`:''}<div class="rh"><span>${esc(o.head)}</span><span>${esc(o.no||'')}</span></div>
+ ${o.who?`<p class="who">${esc(o.who)}</p>`:''}${(o.lines||[]).map(([a,b])=>`<div class="line"><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join('')}
+ ${o.total?`<div class="line tot"><span>Total</span><span>${esc(o.total)}</span></div>`:''}${o.fx||''}</div>`}
+async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...b,session})});const j=await r.json().catch(()=>({error:'The server sent an unreadable reply.'}));return j}
+/* agent trace */
+const KIND={think:'MODEL',tool:'CALL',fx:'FX',guard:'GATE',act:'PAYPAL'};
+function trace(steps,title){const el=document.getElementById('trace');if(!steps?.length)return;el.querySelector('.ph')?.remove();
+ el.insertAdjacentHTML('beforeend',`<li class="run">${esc(title)} · ${now()}</li>`+steps.map(s=>`<li><span class="k ${s.k}">${KIND[s.k]||s.k}</span><span class="l">${esc(s.label)}${s.detail?`<span class="d">${esc(s.detail)}</span>`:''}</span><span class="t">${s.ms!=null?s.ms+'ms':''}</span></li>`).join(''))}
+function traceEmpty(){document.getElementById('trace').innerHTML='<li class="ph empty" style="display:block">Send a message and you’ll see which model step ran, the PayPal call it chose, and where it stopped for your signature.</li>'}
+function confirmCard(r){const a=r.args||{},d=wrap('a');lastFx=r.fx;lastDesc=a.description||'';
+ if(r.tool!=='create_and_send_invoice'){d.innerHTML=receipt({head:'Needs your signature',lines:[[r.summary,'']]})}
+ else d.innerHTML=receipt({head:'Draft invoice',no:a.due_date?'Due '+a.due_date:'',who:a.recipient_email,lines:[[a.description,H.money(a.amount,a.currency)]],total:r.fx?H.money(r.fx.usd)+' USD':'',fx:fxLine(r.fx)});
+ const rc=d.querySelector('.receipt'),row=document.createElement('div');row.className='acts';
+ for(const [l,v,c] of [['Sign and send',true,'btn primary'],['Discard',false,'btn']]){const b=document.createElement('button');b.className=c;b.textContent=l;
+  b.onclick=async()=>{if(demo)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);const t=typing();let x;try{x=await post('/api/confirm',{approve:v})}catch(e){x={error:'Connection failed. Check your network and try again.'}}t.remove();
+   if(!v)rc.insertAdjacentHTML('afterbegin','<span class="stamp">VOID</span>');trace(x.trace,v?'Signed':'Discarded');show(x)};row.appendChild(b)}
+ rc.appendChild(row);if(!demo)row.firstChild.focus({preventScroll:true})}
+function sentCard(x){const d=wrap('a'),f=x.fx||lastFx;
+ d.innerHTML=receipt({head:'Sent via PayPal',no:x.id,who:x.recipient,lines:[[lastDesc||'Invoice','Due '+(x.due_date||'')]],total:H.money(x.amount_usd)+' USD',fx:fxLine(f),stamp:'SENT'});
+ if(x.pay_link){const amt=f&&f.from!=='USD'?`${H.money(f.amount,f.from)} (${H.money(f.usd)})`:H.money(x.amount_usd);
+  const msg=`Hi ${name(x.recipient)}, here’s your invoice${lastDesc?' for '+lastDesc.toLowerCase():''}: ${amt}, due ${x.due_date}. You can pay securely with PayPal here: ${x.pay_link}`;
+  const row=document.createElement('div');row.className='acts';
+  row.innerHTML=`<a class="btn primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">Send on WhatsApp</a><button class="btn" type="button">Copy pay link</button>`;
+  row.querySelector('button').onclick=async e=>{try{await navigator.clipboard.writeText(x.pay_link);e.target.textContent='Copied'}catch{e.target.textContent='Copy failed'}};
+  d.querySelector('.receipt').appendChild(row)}
+ loadRecent()}
+function show(r){session=r.session||session;
+ if(r.error){const d=add('That didn’t go through. '+r.error,'e');return}
+ if(r.result?.id&&r.result?.status)sentCard(r.result);
+ else if(r.result?.declined)add('Discarded. Nothing was sent.');
+ if(r.kind==='reply'&&r.text&&!(r.result?.id))add(r.text);
+ if(r.kind==='confirm')confirmCard(r)}
+async function send(t){t=(t||inp.value).trim();if(!t){inp.focus();return}inp.value='';add(t,'u');document.getElementById('chips').hidden=true;const ty=typing();let r;
+ try{r=await post('/api/chat',{message:t})}catch{r={error:'Connection failed. Check your network and try again.'}}ty.remove();trace(r.trace,'“'+(t.length>40?t.slice(0,40)+'…':t)+'”');show(r)}
+document.getElementById('f').onsubmit=e=>{e.preventDefault();send()};document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>send(c.textContent));
+function paidCard(t){const d=wrap('a');d.innerHTML=receipt({head:'Payment received',no:now(),lines:[[t,'']],stamp:'PAID'})}
+const SAMPLE=[{id:'INV2-DM4C-CGKR',number:'0007',recipient:'tunde@example.com',amount:'37.47',status:'PAID',due:'2026-10-30'},{id:'INV2-K2PQ-88XA',number:'0006',recipient:'wanjiru@example.com',amount:'92.40',status:'SENT',due:'2026-11-04'},{id:'INV2-YVUC-7KDS',number:'0005',recipient:'ada@example.com',amount:'10.00',status:'MARKED_AS_PAID',due:'2026-11-06'}];
+function recent(rows){const el=document.getElementById('recent');
+ if(!rows.length){el.innerHTML='<p class="empty">No invoices yet. Your first one will appear here the moment PayPal accepts it.</p>';return}
+ el.innerHTML=rows.slice(0,3).map(x=>receipt({head:'No. '+(x.number||'·'),no:'Due '+(x.due||'·'),who:x.recipient,total:H.money(x.amount)+' USD',stamp:/^(PAID|MARKED_AS_PAID)$/.test(x.status)?'PAID':x.status==='CANCELLED'?'VOID':''})).join('')}
+async function loadRecent(){if(demo)return recent(SAMPLE);const el=document.getElementById('recent');
+ try{const r=await (await fetch('/api/invoices')).json();if(!Array.isArray(r))throw Error(r.error);recent(r.slice().sort((a,b)=>String(b.number).localeCompare(String(a.number))))}
+ catch(e){el.innerHTML='<p class="empty">Couldn’t reach PayPal. <button class="btn" type="button" id="rt">Try again</button></p>';document.getElementById('rt').onclick=loadRecent}}
+H.loadFx(demo);loadRecent();traceEmpty();
+if(demo){document.getElementById('chips').hidden=true;
  add('Bill tunde@example.com ₦50,000 for logo design, due Friday','u');
- add('I’ll create a PayPal invoice for Tunde: $33.33 (₦50,000 at 1,500 NGN/USD), “Logo design”, due Fri 30 Oct.');
- confirmCard('Send invoice to tunde@example.com · $33.33 (₦50,000) · Logo design · due 2026-10-30',true);
- add('Invoice INV2-7V9F-4NG6-NMKV-PXW7 sent. Tunde has a PayPal pay link in his inbox.');
- add('Tunde just paid $33.33 (₦50,000) 🎉','n');add('Who still owes me?','u');typing()}
-else{add('Hi! Tell me who to bill, how much and for what. I’ll draft the PayPal invoice and wait for your OK before sending.');
- if(!q.includes('nolive')){const es=new EventSource('/api/events');for(const t of ['invoice','event'])es.addEventListener(t,e=>{const x=JSON.parse(e.data).text;add(x,'n');toast(x)})}}
+ const fx={from:'NGN',symbol:'₦',amount:50000,usd:37.47,rate:1334.3,source:'live'};
+ trace([{k:'think',label:'deepseek-chat chose create_and_send_invoice',ms:1412},{k:'tool',label:'Call create_and_send_invoice',detail:'{"recipient_email":"tunde@example.com","amount":50000,"currency":"NGN","due_date":"2026-10-30"}'},{k:'fx',label:'Convert NGN → USD',detail:'50,000 ÷ 1334.3 = 37.47 (live rate)'},{k:'guard',label:'Paused for your signature',detail:'create_and_send_invoice changes money or emails a client, so it needs approval'}],'“Bill tunde@example.com ₦50,000 for logo…”');
+ confirmCard({tool:'create_and_send_invoice',args:{recipient_email:'tunde@example.com',description:'Logo design',amount:50000,currency:'NGN',due_date:'2026-10-30'},fx});
+ trace([{k:'guard',label:'You signed',detail:'create_and_send_invoice'},{k:'act',label:'PayPal create_and_send_invoice',detail:'{"id":"INV2-DM4C-CGKR-LXJ7-C7ZL","status":"SENT"}',ms:2210},{k:'think',label:'deepseek-chat wrote a reply',ms:960}],'Signed');
+ sentCard({id:'INV2-DM4C-CGKR-LXJ7',status:'SENT',recipient:'tunde@example.com',amount_usd:'37.47',due_date:'2026-10-30',pay_link:'https://www.sandbox.paypal.com/invoice/p/#DM4CCGKRLXJ7C7ZL',fx})}
+else{add('Who are we billing? Give me the client’s email, the amount in any currency, and what it’s for. I won’t send anything until you sign.');
+ if(!q.includes('nolive')){const es=new EventSource('/api/events');for(const t of ['invoice','event'])es.addEventListener(t,e=>{const x=JSON.parse(e.data).text;/paid/i.test(x)?paidCard(x):add(x);H.toast(x);loadRecent()})}}
 </script></body></html>
