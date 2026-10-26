@@ -54,7 +54,7 @@ export async function createAndSendInvoice(i: InvoiceInput) {
   await pp("POST", `/v2/invoicing/invoices/${id}/send`, { send_to_recipient: true });
   const inv = await pp("GET", `/v2/invoicing/invoices/${id}`);
   return { id, status: inv.status, amount_usd: usd, due_date: i.due_date, recipient: i.recipient_email,
-    pay_link: inv.links?.find((l: any) => l.rel === "payer-view")?.href };
+    pay_link: inv.detail?.metadata?.recipient_view_url };
 }
 
 export async function listInvoices(status?: string) {
@@ -84,6 +84,9 @@ export async function cashflow() {
     outstanding_usd: sum(open).toFixed(2),
     overdue_usd: sum((x) => open(x) && x.due && x.due < today).toFixed(2),
     overdue: all.filter((x: any) => open(x) && x.due && x.due < today),
+    cancelled_usd: sum((x) => x.status === "CANCELLED").toFixed(2),
+    by_status: all.reduce((a: Record<string, number>, x: any) => ({ ...a, [x.status]: (a[x.status] || 0) + 1 }), {}),
+    note: "Live data from PayPal; it supersedes any earlier statuses in the conversation.",
     ngn_per_usd: ngnPerUsd(),
   };
 }
