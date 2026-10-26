@@ -56,7 +56,18 @@ export type Step = { kind: "reply"; text: string } | { kind: "confirm"; tool: st
 function parseJson(s: string): any {
   const m = s.replace(/```(json)?/g, "").match(/\{[\s\S]*\}/);
   if (!m) return { action: "reply", text: s };
-  try { return JSON.parse(m[0]); } catch { return { action: "reply", text: s }; }
+  try { return JSON.parse(m[0]); } catch {}
+  // LLMs often put raw newlines/tabs inside JSON strings; escape control chars that sit inside string literals.
+  let out = "", inStr = false, esc = false;
+  for (const ch of m[0]) {
+    if (inStr && !esc && ch === "\n") { out += "\\n"; continue; }
+    if (inStr && !esc && ch === "\r") { out += "\\r"; continue; }
+    if (inStr && !esc && ch === "\t") { out += "\\t"; continue; }
+    if (ch === '"' && !esc) inStr = !inStr;
+    esc = !esc && ch === "\\";
+    out += ch;
+  }
+  try { return JSON.parse(out); } catch { return { action: "reply", text: s }; }
 }
 
 /** Runs the loop until a reply, or until a mutating action needs confirmation. history is mutated. */
