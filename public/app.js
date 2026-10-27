@@ -28,9 +28,21 @@ function receipt(o){return `<div class="receipt">${o.stamp?`<span class="stamp $
 async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...b,session})});const j=await r.json().catch(()=>({error:'The server sent an unreadable reply.'}));return j}
 /* agent trace */
 const KIND={think:'MODEL',tool:'CALL',fx:'FX',guard:'GATE',act:'PAYPAL'};
+const KEYS={recipient_email:'to',recipient:'to',amount:'amount',currency:'currency',due_date:'due',description:'for',status:'status',id:'invoice'};
+function tdetail(s){const d=s.detail;if(!d)return '';let o=null;if(/^\s*\{/.test(d))try{o=JSON.parse(d)}catch{}
+ if(o&&typeof o==='object'){const ks=Object.keys(o).sort((x,y)=>(Object.keys(KEYS).indexOf(x)+99)%99-(Object.keys(KEYS).indexOf(y)+99)%99);
+  return `<dl class="kv">${ks.map(k=>`<dt>${esc(KEYS[k]||k.replace(/_/g,' '))}</dt><dd${k==='status'?' class="st"':''} title="${esc(String(o[k]))}">${esc(typeof o[k]==='object'?JSON.stringify(o[k]):String(o[k]))}</dd>`).join('')}</dl>`}
+ return s.k==='fx'?`<span class="math">${esc(d)}</span>`:`<span class="d">${esc(d)}</span>`}
+function tstep(s){return `<li class="st-${esc(s.k)}"><span class="k">${KIND[s.k]||esc(s.k)}</span><span class="l">${esc(s.label)}${tdetail(s)}</span><span class="t">${s.ms!=null?(s.ms>=1000?(s.ms/1000).toFixed(2)+'s':s.ms+'ms'):''}</span></li>`}
+const OUT={Signed:['Signed','ok'],Discarded:['Discarded','no']};
 function trace(steps,title){const el=document.getElementById('trace');if(!steps?.length)return;el.querySelector('.ph')?.remove();
- el.insertAdjacentHTML('beforeend',`<li class="run">${esc(title)} · ${now()}</li>`+steps.map(s=>`<li><span class="k ${s.k}">${KIND[s.k]||s.k}</span><span class="l">${esc(s.label)}${s.detail?`<span class="d">${esc(s.detail)}</span>`:''}</span><span class="t">${s.ms!=null?s.ms+'ms':''}</span></li>`).join(''))}
-function traceEmpty(){document.getElementById('trace').innerHTML='<li class="ph empty" style="display:block">Send a message and you’ll see which model step ran, the PayPal call it chose, and where it stopped for your signature.</li>'}
+ const follow=OUT[title];let run=follow&&el.lastElementChild?.classList.contains('run')?el.lastElementChild:null;
+ if(!run){el.insertAdjacentHTML('beforeend',`<li class="run"><div class="rhd"><span class="q" title="${esc(title)}">${esc(title)}</span><span class="b"></span><time>${now()}</time></div><ol class="steps"></ol></li>`);run=el.lastElementChild}
+ run.querySelector('.steps').insertAdjacentHTML('beforeend',steps.map(tstep).join(''));
+ const b=run.querySelector('.b'),last=steps[steps.length-1];
+ const [txt,cls]=follow?(title==='Signed'&&steps.some(x=>x.k==='act'&&/SENT/i.test(x.detail||''))?['Sent','ok']:follow):last.k==='guard'?['Awaiting signature','wait']:steps.some(x=>x.k==='act')?['Done','ok']:['Answered',''];
+ b.textContent=txt;b.className='b '+cls;run.scrollIntoView?.({block:'nearest'})}
+function traceEmpty(){document.getElementById('trace').innerHTML='<li class="ph empty">Send a message and you’ll see which model step ran, the PayPal call it chose, and where it stopped for your signature.</li>'}
 function confirmCard(r){const a=r.args||{},d=wrap('a'),acts=r.actions||[{tool:r.tool,args:a,summary:r.summary}];lastFx=r.fx;lastDesc=a.description||'';
  const ivLine=x=>{const v=x.invoice;if(!v)return [x.summary,''];return ['No. '+(v.number||'·')+' · '+(v.client||'client')+(v.status?' · '+v.status:''),H.money(v.amount,v.currency||'USD')]};
  if(r.tool!=='create_and_send_invoice'||acts.length>1){const reminders=acts.every(x=>x.tool==='send_reminder'),tot=acts.reduce((s,x)=>s+Number(x.invoice?.amount||0),0);
