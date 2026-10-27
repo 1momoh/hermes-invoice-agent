@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { listInvoices, ngnPerUsd, pp } from "./paypal.js";
+import { listInvoices, pp } from "./paypal.js";
 
 // ---- SSE hub ----------------------------------------------------------------
 const clients = new Set<Response>();
@@ -30,9 +30,8 @@ const who = (x: any) => x.recipient_name || (x.recipient ? x.recipient.split("@"
 
 export function message(x: any, status: string): string {
   const amt = `$${Number(x.amount || 0).toFixed(2)}`;
-  const ngn = `₦${Math.round(Number(x.amount || 0) * ngnPerUsd()).toLocaleString()}`;
   switch (status) {
-    case "PAID": case "MARKED_AS_PAID": return `${who(x)} just paid ${amt} (${ngn}) for invoice #${x.number}.`;
+    case "PAID": case "MARKED_AS_PAID": return `${who(x)} just paid ${amt} for invoice #${x.number}.`;
     case "PARTIALLY_PAID": return `${who(x)} made a partial payment on invoice #${x.number}.`;
     case "CANCELLED": return `Invoice #${x.number} to ${who(x)} was cancelled.`;
     case "REFUNDED": case "PARTIALLY_REFUNDED": case "MARKED_AS_REFUNDED": return `Invoice #${x.number} to ${who(x)} was refunded.`;

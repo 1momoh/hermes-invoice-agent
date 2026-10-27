@@ -9,7 +9,7 @@ const MODEL = process.env.LLM_MODEL || "hermes-agent";
 const MODE = process.env.AGENT_MODE || (MODEL === "hermes-agent" ? "json" : "tools");
 
 const TOOLS: Record<string, { description: string; parameters: any; mutating: boolean }> = {
-  create_and_send_invoice: { mutating: true, description: "Create a PayPal invoice and email it to the client. Set currency from the user's symbol or words: ₦/naira/NGN → NGN, KSh/shillings/KES → KES, GH₵/cedis/GHS → GHS, R/rand/ZAR → ZAR, ₹/rupees/INR → INR, $/dollars → USD. Keep the amount in that currency; the app converts it to USD. '50k' = 50000.",
+  create_and_send_invoice: { mutating: true, description: "Create a PayPal invoice and email it to the client. Set currency from the user's symbol or words: ₦/naira/NGN → NGN, KSh/shillings/KES → KES, GH₵/cedis/GHS → GHS, R/rand/ZAR → ZAR, ₹/rupees/INR → INR, $/US$/dollars/USD → USD. Keep the amount in that currency; the app converts local currencies to USD (USD needs no conversion). If no currency is stated, use USD and do not ask. '50k' = 50000.",
     parameters: { type: "object", required: ["recipient_email", "description", "amount", "currency", "due_date"], properties: {
       recipient_email: { type: "string" }, recipient_name: { type: "string" }, description: { type: "string" }, amount: { type: "number" },
       currency: { type: "string", enum: ["USD", "NGN", "KES", "GHS", "ZAR", "INR"] }, due_date: { type: "string", description: "YYYY-MM-DD" }, note: { type: "string" } } } },
@@ -34,8 +34,8 @@ export async function runTool(name: string, a: any): Promise<any> {
 export function describe(name: string, a: any, inv?: Action["invoice"]): string {
   const label = inv ? `invoice #${inv.number ?? "?"} to ${inv.client ?? "client"} (${inv.currency ?? "USD"} ${inv.amount ?? "?"})` : `invoice ${a.invoice_id}`;
   if (name === "create_and_send_invoice") {
-    const f = FX.convert(Number(a.amount), a.currency || "USD"), usd = f.usd.toFixed(2);
-    const src = FX.isLocal(f.from) ? `${f.from} ${f.amount.toLocaleString()} → USD ${usd} (at ${f.rate.toFixed(2)} ${f.from}/USD, ${f.source})` : `USD ${usd}`;
+    const f = FX.convert(Number(a.amount), a.currency), usd = f.usd.toFixed(2);
+    const src = FX.isLocal(f.from) ? `${f.from} ${f.amount.toLocaleString()} → USD ${usd} (at ${f.rate.toFixed(2)} ${f.from}/USD, ${f.source})` : `USD ${usd}, no conversion needed${FX.normalizeCurrency(a.currency).assumed ? " (no currency given, assumed USD)" : ""}`;
     return `Send invoice to ${a.recipient_email} for "${a.description}": ${src}, due ${a.due_date}.`;
   }
   if (name === "send_reminder") return `Send a payment reminder for ${label}.`;
@@ -45,7 +45,7 @@ export function describe(name: string, a: any, inv?: Action["invoice"]): string 
 
 function system() {
   const d = new Date();
-  return `You are Hermes Invoice Agent, an invoicing assistant for freelancers and small businesses anywhere in the world. Today is ${d.toDateString()} (${d.toISOString().slice(0, 10)}). Resolve relative dates like "Friday" to the next such date as YYYY-MM-DD. PayPal invoices settle in USD; local-currency amounts (NGN, KES, GHS, ZAR, INR) are converted by the app at live rates. Be brief. Never invent invoice ids; list invoices first if needed. When acting on several invoices, request one action per invoice in the same turn, covering every invoice you listed. Plain markdown (bold, lists, small tables) is fine.`;
+  return `You are Hermes Invoice Agent, an invoicing assistant for freelancers and small businesses anywhere in the world. Today is ${d.toDateString()} (${d.toISOString().slice(0, 10)}). Resolve relative dates like "Friday" to the next such date as YYYY-MM-DD. PayPal invoices settle in USD; local-currency amounts (NGN, KES, GHS, ZAR, INR) are converted by the app at live rates; USD amounts ($200, 200 dollars) go straight through. If the user gives no currency, assume USD rather than asking. Be brief. Never invent invoice ids; list invoices first if needed. When acting on several invoices, request one action per invoice in the same turn, covering every invoice you listed. Plain markdown (bold, lists, small tables) is fine.`;
 }
 
 function jsonInstructions() {
@@ -75,7 +75,12 @@ async function confirmBatch(calls: { tool: string; args: any; call_id?: string }
   const actions = await enrich(calls);
   const first = actions[0];
   let fx;
-  if (first.tool === "create_and_send_invoice") { fx = FX.convert(Number(first.args.amount), first.args.currency || "USD"); if (FX.isLocal(fx.from)) trace.push({ k: "fx", label: `Convert ${fx.from} → USD`, detail: `${fx.amount.toLocaleString()} ÷ ${fx.rate.toFixed(2)} = ${fx.usd.toFixed(2)} (${fx.source} rate)` }); }
+  if (first.tool === "create_and_send_invoice") {
+    const cur = FX.normalizeCurrency(first.args.currency); first.args.currency = cur.code;
+    fx = { ...FX.convert(Number(first.args.amount), cur.code), assumed: cur.assumed };
+    if (!fx.converted) trace.push({ k: "fx", label: "No conversion: already USD", detail: cur.assumed ? "No currency given, so Hermes assumed USD" : "PayPal settles in USD as-is" });
+    else if (FX.isLocal(fx.from)) trace.push({ k: "fx", label: `Convert ${fx.from} → USD`, detail: `${fx.amount.toLocaleString()} ÷ ${fx.rate.toFixed(2)} = ${fx.usd.toFixed(2)} (${fx.source} rate)` });
+  }
   trace.push({ k: "guard", label: `Paused for your signature${actions.length > 1 ? ` (${actions.length} actions)` : ""}`, detail: `${[...new Set(actions.map((a) => a.tool))].join(", ")} changes money or emails a client, so it needs approval` });
   return { kind: "confirm", tool: first.tool, args: first.args, summary: actions.map((a) => a.summary).join("\n"), fx, actions };
 }
