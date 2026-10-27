@@ -12,7 +12,7 @@ a{color:inherit;text-underline-offset:3px}
 .skip:focus{top:16px}
 .wrap{max-width:1152px;margin:0 auto;padding:0 32px}
 .top{display:flex;align-items:center;gap:16px;height:72px;border-bottom:1px solid var(--ink)}
-.brand{font:600 20px/28px var(--serif);text-decoration:none;letter-spacing:-.01em;margin-right:auto}
+.brand{display:inline-flex;align-items:center;gap:8px;color:inherit;font:600 20px/28px var(--serif);text-decoration:none;letter-spacing:-.01em;margin-right:auto}
 .tabs{display:flex;gap:4px}
 .tabs a{font:500 14px/20px var(--mono);text-decoration:none;padding:8px 12px;border-radius:var(--r);color:var(--ink2);transition:background-color .4s var(--ease),color .4s var(--ease)}
 .tabs a:hover{background:var(--rule2);color:var(--ink)}.tabs a[aria-current]{background:var(--ink);color:var(--sheet)}
@@ -60,3 +60,5 @@ h1{font:400 48px/48px var(--serif);letter-spacing:-.02em;margin:8px 0 16px;text-
 .site-foot{text-align:center;padding:28px 16px 36px;font-size:13px;opacity:.7;letter-spacing:.01em}
 .site-foot a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .site-foot a:hover{opacity:1}
+
+.brand .mark{flex:none}
