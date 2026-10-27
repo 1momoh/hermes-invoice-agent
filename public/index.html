@@ -9,7 +9,7 @@
 .intro{margin-bottom:32px}
 .chat{background:var(--sheet);border:1px solid var(--ink);border-radius:12px;display:flex;flex-direction:column;height:min(720px,calc(100dvh - 160px));min-height:520px;overflow:hidden}
 .chathead{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--rule)}
-.av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--sheet);display:grid;place-items:center;font:600 16px var(--serif);flex:none}
+.av{width:36px;height:36px;display:grid;place-items:center;flex:none}.av svg{display:block}
 .chathead b{display:block;font:600 16px/24px var(--serif)}.chathead span{display:block;font:12px/16px var(--mono);color:var(--ink3)}
 #log{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
 .m{max-width:85%;width:fit-content;animation:in .5s var(--ease) both}.m.u{align-self:flex-end}
@@ -78,7 +78,7 @@ Hermes</a><span class="rate" id="rate" tabindex="0" role="note"></span>
 <main class="layout"><section aria-labelledby="h">
 <div class="intro"><p class="eyebrow">Invoice agent for PayPal</p><h1 id="h">Bill in your currency.<br>Get paid through PayPal.</h1>
 <p class="sub">Text Hermes like you’d text your bookkeeper. It drafts the invoice, converts naira, shillings, cedis, rand or rupees to US dollars at today’s rate (or bills dollars straight), and sends nothing until you sign.</p></div>
-<div class="chat"><div class="chathead"><div class="av" aria-hidden="true">H</div><div><b>Hermes</b><span>Bookkeeper · PayPal sandbox</span></div></div>
+<div class="chat"><div class="chathead"><div class="av" aria-hidden="true"><svg viewBox="0 0 64 64" width="36" height="36"><path d="M12 6h40v46l-6.7 6-6.7-6-6.6 6-6.7-6-6.6 6L12 52z" fill="#1a1814"/><path d="M20 34c6-14 18-20 28-20-3 4-6 6-10 7 3 1 5 0 7-1-3 5-7 7-12 7 2 1 4 1 6 1-5 5-12 7-19 6z" fill="#fcfaf5"/></svg></div><div><b>Hermes</b><span>Bookkeeper · PayPal sandbox</span></div></div>
 <div id="log" role="log" aria-live="polite" aria-label="Conversation"></div>
 <div class="chips" id="chips" role="group" aria-label="Suggestions"><button class="chip">Bill tunde@example.com ₦50,000 for logo design, due Friday</button><button class="chip">Bill wanjiru@example.com KSh 12,000 for a site audit</button><button class="chip">Bill sam@example.com $200 for consulting, due Friday</button><button class="chip">Who still owes me?</button><button class="chip">Cashflow this month</button></div>
 <form class="composer" id="f"><label for="i" class="sr">Message Hermes</label><input id="i" placeholder="Bill ada@example.com ₦15,000 for a website audit" autocomplete="off" enterkeyhint="send"><button class="btn primary" id="s">Send</button></form></div>
