@@ -3,12 +3,17 @@ import { listInvoices, ngnPerUsd, pp } from "./paypal.js";
 
 // ---- SSE hub ----------------------------------------------------------------
 const clients = new Set<Response>();
+export const MAX_SSE = Number(process.env.MAX_SSE_CLIENTS || 100);
+export const sseCount = () => clients.size;
 export function sse(req: Request, res: Response) {
+  if (clients.size >= MAX_SSE) return res.status(503).json({ error: "Too many live connections. Try again shortly." });
   res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
   res.write(": connected\n\n");
   clients.add(res);
   const ping = setInterval(() => res.write(": ping\n\n"), 25000);
-  req.on("close", () => { clearInterval(ping); clients.delete(res); });
+  const maxAge = setTimeout(() => res.end(), 30 * 60_000); // client reconnects with a fresh token
+  const done = () => { clearInterval(ping); clearTimeout(maxAge); clients.delete(res); };
+  req.on("close", done); res.on("error", done);
 }
 export function broadcast(type: string, data: unknown) {
   for (const c of clients) c.write(`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
@@ -16,6 +21,11 @@ export function broadcast(type: string, data: unknown) {
 
 // ---- status-change detection (shared by webhook + poller, de-duplicated) ----
 const known = new Map<string, string>();
+const MAX_KNOWN = 5000;
+function remember(id: string, status: string) {
+  known.delete(id); known.set(id, status); // re-insert = most recent
+  while (known.size > MAX_KNOWN) known.delete(known.keys().next().value!);
+}
 const who = (x: any) => x.recipient_name || (x.recipient ? x.recipient.split("@")[0].replace(/^./, (c: string) => c.toUpperCase()) : "A client");
 
 export function message(x: any, status: string): string {
@@ -32,7 +42,7 @@ export function message(x: any, status: string): string {
 
 function onStatus(x: any, source: "webhook" | "poll") {
   const prev = known.get(x.id);
-  known.set(x.id, x.status);
+  remember(x.id, x.status);
   if (prev === x.status) return;
   if (prev === undefined && source === "poll") return; // first sighting: seed only
   broadcast("invoice", { id: x.id, status: x.status, previous: prev, source, text: message(x, x.status) });
@@ -62,7 +72,7 @@ export const WEBHOOK_EVENTS = [
 ];
 
 async function verify(req: Request): Promise<boolean> {
-  if (process.env.WEBHOOK_DEV_SKIP_VERIFY === "1" && process.env.NODE_ENV !== "production") return true; // dev-only bypass
+  if (process.env.WEBHOOK_DEV_SKIP_VERIFY === "1" && process.env.NODE_ENV === "development") return true; // dev-only bypass
   const id = process.env.PAYPAL_WEBHOOK_ID;
   if (!id) return false;
   const h = (k: string) => req.header(k) || "";
@@ -76,7 +86,7 @@ async function verify(req: Request): Promise<boolean> {
 
 export async function webhook(req: Request, res: Response) {
   let ok = false;
-  try { ok = await verify(req); } catch (e: any) { console.error("verify error:", e.message); }
+  try { ok = await verify(req); } catch (e: any) { console.error("verify error:", e?.message); }
   if (!ok) return res.status(400).json({ error: "signature verification failed" });
   const ev: any = req.body;
   res.status(200).json({ received: true }); // ack fast; PayPal retries non-2xx

@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import * as P from "./paypal.js";
 import * as FX from "./fx.js";
+import { UserError } from "./security.js";
 
 const client = new OpenAI({ baseURL: process.env.LLM_BASE_URL || "http://127.0.0.1:8642/v1", apiKey: process.env.LLM_API_KEY || "none" });
 const MODEL = process.env.LLM_MODEL || "hermes-agent";
@@ -23,8 +24,8 @@ export async function runTool(name: string, a: any): Promise<any> {
   switch (name) {
     case "create_and_send_invoice": return P.createAndSendInvoice(a);
     case "list_invoices": return P.listInvoices(a.status);
-    case "send_reminder": return P.remind(a.invoice_id, a.note);
-    case "cancel_invoice": return P.cancel(a.invoice_id, a.note);
+    case "send_reminder": return P.remind(String(a.invoice_id ?? ""), a.note);
+    case "cancel_invoice": return P.cancel(String(a.invoice_id ?? ""), a.note);
     case "cashflow_summary": return P.cashflow();
   }
   throw new Error(`unknown tool ${name}`);
@@ -136,14 +137,25 @@ export async function step(history: Msg[], trace: Trace = []): Promise<Step> {
 
 function parseArgs(s?: string) { try { return JSON.parse(s || "{}"); } catch { return {}; } }
 function brief(o: any) { if (Array.isArray(o)) return `${o.length} items`; if (o?.error) return "error: " + o.error; const s = JSON.stringify(o); return s.length > 120 ? s.slice(0, 117) + "…" : s; }
-async function safe(name: string, a: any) { try { return await runTool(name, a); } catch (e: any) { return { error: e.message }; } }
+/** Errors shown to users/LLM are generic unless they are deliberate UserErrors / PayPalErrors; details go to the server log. */
+export async function safe(name: string, a: any) {
+  try { return await runTool(name, a); }
+  catch (e: any) {
+    if (e instanceof UserError || e instanceof P.PayPalError) return { error: e.message };
+    console.error(`tool ${name} failed:`, e?.message);
+    return { error: "Something went wrong talking to PayPal. Nothing else was changed." };
+  }
+}
 
 /** After the user confirms or declines pending action(s). Runs every action, never throws for a single failure. */
-export async function resolve(history: Msg[], actions: Action[], approved: boolean, trace: Trace = []): Promise<{ result: any; outcomes: Outcome[]; next: Step }> {
+export type Guard = (a: Action) => Promise<string | null>; // returns a refusal message, or null to allow
+export async function resolve(history: Msg[], actions: Action[], approved: boolean, trace: Trace = [], guard?: Guard): Promise<{ result: any; outcomes: Outcome[]; next: Step }> {
   trace.push({ k: "guard", label: approved ? "You signed" : "You declined", detail: actions.map((a) => a.tool).join(", ") });
   const outcomes: Outcome[] = [];
   for (const a of actions) {
     if (!approved) { outcomes.push({ tool: a.tool, ok: false, summary: a.summary, invoice: a.invoice, result: { declined: true } }); continue; }
+    const refusal = guard ? await guard(a).catch(() => "I couldn't check that invoice, so nothing was sent.") : null;
+    if (refusal) { trace.push({ k: "guard", label: "Blocked by demo policy", detail: a.summary }); outcomes.push({ tool: a.tool, ok: false, summary: a.summary, invoice: a.invoice, result: { error: refusal, refused: true }, error: refusal }); continue; }
     const t1 = performance.now();
     const r = await safe(a.tool, a.args);
     trace.push({ k: "act", label: `PayPal ${a.tool}${a.invoice?.number ? " #" + a.invoice.number : ""}`, detail: brief(r), ms: ms(t1) });

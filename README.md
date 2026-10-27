@@ -60,3 +60,6 @@ Design audit: [docs/design-audit.md](docs/design-audit.md). Hackathon pitch: [do
 
 ## License
 MIT
+
+## Security & demo mode
+The public site is a **sandbox demo with no sign-in**. Anyone can try it, but sends, reminders and cancellations only go to `@example.com` addresses. The owner unlocks everything with `?key=<APP_TOKEN>`. With `PAYPAL_ENV=live`, everything except health and fx requires the token. New endpoints: `POST /api/auth`, `GET /api/me`, `POST /api/events/token`. Run tests with `npm test`. Details are in [docs/security.md](docs/security.md).
