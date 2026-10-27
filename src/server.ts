@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import compression from "compression";
 import { randomUUID } from "node:crypto";
-import { step, resolve, agentMode, type Msg } from "./agent.js";
+import { step, resolve, agentMode, type Msg, type Action } from "./agent.js";
 import { cashflow, listInvoices } from "./paypal.js";
 import * as FX from "./fx.js";
 import { sse, webhook, startPolling, pollOnce } from "./events.js";
@@ -18,11 +18,11 @@ app.get("/api/fx", async (_q, r) => { await FX.refresh(); r.json(FX.snapshot());
 app.post("/api/paypal/webhook", webhook);
 app.post("/api/poll", async (_q, r) => { try { r.json(await pollOnce()); } catch (e: any) { r.status(500).json({ error: e.message }); } });
 app.use(express.static("public"));
-const sessions = new Map<string, { history: Msg[]; pending?: { tool: string; args: any } }>();
+const sessions = new Map<string, { history: Msg[]; pending?: Action[] }>();
 const sess = (id?: string) => { const k = id || randomUUID(); if (!sessions.has(k)) sessions.set(k, { history: [] }); return [k, sessions.get(k)!] as const; };
 
 function out(s: any, k: string, r: any) {
-  if (r.kind === "confirm") s.pending = { tool: r.tool, args: r.args };
+  if (r.kind === "confirm") s.pending = r.actions;
   return { session: k, ...r };
 }
 app.post("/api/chat", async (req, res) => {
@@ -32,9 +32,9 @@ app.post("/api/chat", async (req, res) => {
 });
 app.post("/api/confirm", async (req, res) => {
   const [k, s] = sess(req.body.session);
-  if (!s.pending) return res.status(400).json({ error: "nothing pending" });
+  if (!s.pending?.length) return res.status(409).json({ session: k, error: "This request has expired (the server may have restarted). Nothing was sent. Ask again and I'll prepare a fresh one." });
   const p = s.pending; s.pending = undefined;
-  try { const trace: any[] = []; const { result, next } = await resolve(s.history, p.tool, p.args, !!req.body.approve, trace); res.json({ result, ...out(s, k, next), trace }); }
+  try { const trace: any[] = []; const { result, outcomes, next } = await resolve(s.history, p, !!req.body.approve, trace); res.json({ result, outcomes, approved: !!req.body.approve, ...out(s, k, next), trace }); }
   catch (e: any) { res.status(500).json({ session: k, error: e.message }); }
 });
 app.get("/api/invoices", async (_q, r) => { try { r.json(await listInvoices()); } catch (e: any) { r.status(500).json({ error: e.message }); } });
