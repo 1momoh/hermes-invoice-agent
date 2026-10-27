@@ -69,8 +69,14 @@ export async function listInvoices(status?: string) {
   }));
 }
 
-export const remind = (id: string, note?: string) =>
-  pp("POST", `/v2/invoicing/invoices/${id}/remind`, { subject: "Payment reminder", note: note || "Friendly reminder that this invoice is due.", send_to_recipient: true }).then(() => ({ id, reminded: true }));
+export async function remind(id: string, note?: string) {
+  // PayPal only accepts reminders for open invoices; check first so the user gets a plain-English reason.
+  const inv = await pp("GET", `/v2/invoicing/invoices/${encodeURIComponent(id)}`);
+  const status = inv.status, number = inv.detail?.invoice_number;
+  if (!["SENT", "UNPAID", "PARTIALLY_PAID"].includes(status)) throw new Error(`Invoice #${number ?? id} is ${status}, so PayPal won't send a reminder for it.`);
+  await pp("POST", `/v2/invoicing/invoices/${encodeURIComponent(id)}/remind`, { subject: "Payment reminder", note: note || "Friendly reminder that this invoice is due.", send_to_recipient: true });
+  return { id, number, reminded: true, recipient: inv.primary_recipients?.[0]?.billing_info?.email_address };
+}
 
 export const cancel = (id: string, note?: string) =>
   pp("POST", `/v2/invoicing/invoices/${id}/cancel`, { subject: "Invoice cancelled", note: note || "This invoice has been cancelled.", send_to_recipient: true }).then(() => ({ id, cancelled: true }));
