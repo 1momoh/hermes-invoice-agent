@@ -47,7 +47,9 @@ export function toUsd(i: InvoiceInput) {
 }
 
 export async function createAndSendInvoice(i: InvoiceInput) {
-  await FX.refresh();
+  const cur = FX.normalizeCurrency(i.currency);
+  i = { ...i, currency: cur.code };
+  if (FX.needsFx(i.currency)) await FX.refresh();
   if (!FX.isLocal(i.currency) && i.currency !== "USD") throw new UserError(`${String(i.currency).slice(0, 8)} isn't supported.`);
   const fx = FX.convert(Number(i.amount), i.currency), usd = fx.usd.toFixed(2);
   validateInvoice(i, fx.usd);

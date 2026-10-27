@@ -20,7 +20,7 @@ function md(src){const L=String(src??'').replace(/\r/g,'').split('\n'),o=[];let 
  return o.join('')}
 function addMd(t){const d=wrap('a');d.innerHTML=`<div class="b md">${md(t)}</div>`;return d}
 function typing(){const d=wrap('a typing');d.setAttribute('aria-label','Hermes is typing');d.innerHTML='<div class="b"><i></i><i></i><i></i></div>';return d}
-function fxLine(f){if(!f||f.from==='USD')return '';const r=f.rate.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+function fxLine(f){if(!f)return '';if(f.from==='USD')return `<div class="fx"><b>${esc(H.money(f.usd))} USD · no conversion needed</b>${f.assumed?'<br>no currency given, so Hermes assumed USD':''}</div>`;const r=f.rate.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
  return `<div class="fx"><b>${esc(H.money(f.amount,f.from))} → ${esc(H.money(f.usd))} USD</b><br>rate ${esc(f.symbol.trim())}${r}/$ · ${f.source==='live'?'live':'fixed'} · PayPal settles in USD</div>`}
 function receipt(o){return `<div class="receipt">${o.stamp?`<span class="stamp ${o.stamp==='PAID'?'paid':''}">${o.stamp}</span>`:''}<div class="rh"><span>${esc(o.head)}</span><span>${esc(o.no||'')}</span></div>
  ${o.who?`<p class="who">${esc(o.who)}</p>`:''}${(o.lines||[]).map(([a,b])=>`<div class="line"><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join('')}

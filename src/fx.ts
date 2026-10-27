@@ -26,9 +26,19 @@ export function rate(c: string): { rate: number; source: "live" | "fixed"; asOf?
 }
 export const isLocal = (c: string): c is Local => c in LOCAL;
 export function convert(amount: number, currency: string) {
+  currency = normalizeCurrency(currency).code;
   const r = rate(currency), usd = Math.round((amount / r.rate) * 100) / 100;
-  return { from: currency, symbol: (LOCAL as any)[currency] || "$", amount, usd, settle: SETTLE, rate: r.rate, source: r.source, asOf: r.asOf };
+  return { from: currency, symbol: (LOCAL as any)[currency] || "$", amount, usd, settle: SETTLE, rate: r.rate, source: r.source, asOf: r.asOf, converted: currency !== SETTLE };
 }
+/** Map what a model or user might write ("$", "usd", "dollars", "₦", "naira"…) to a supported code. Empty → USD (assumed). */
+const ALIASES: Record<string, string> = { "$": "USD", US$: "USD", USD: "USD", DOLLAR: "USD", DOLLARS: "USD", "US DOLLARS": "USD",
+  "₦": "NGN", NAIRA: "NGN", KSH: "KES", SHILLINGS: "KES", "GH₵": "GHS", CEDIS: "GHS", CEDI: "GHS", R: "ZAR", RAND: "ZAR", "₹": "INR", RUPEES: "INR", RUPEE: "INR" };
+export function normalizeCurrency(c: unknown): { code: string; assumed: boolean } {
+  const k = String(c ?? "").trim().toUpperCase();
+  if (!k) return { code: SETTLE, assumed: true };
+  return { code: ALIASES[k] || k, assumed: false };
+}
+export const needsFx = (c: string) => normalizeCurrency(c).code !== SETTLE;
 export function snapshot() {
   return { settle: SETTLE, provider: "open.er-api.com", currencies: Object.fromEntries(Object.entries(LOCAL).map(([c, s]) => [c, { symbol: s, ...rate(c) }])),
     reason: "PayPal Invoicing doesn't support NGN, KES, GHS, ZAR or INR, so invoices are converted and settled in USD." };

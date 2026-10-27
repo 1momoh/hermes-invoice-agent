@@ -26,3 +26,24 @@ describe("FX conversion", () => {
     expect(() => validateInvoice(ok, 1e9)).toThrow(/limit/);
   });
 });
+
+describe("USD invoices", () => {
+  it("reads $, US$, usd, dollars as USD and defaults a missing currency to USD", () => {
+    for (const c of ["$", "US$", "usd", "USD", "dollars", " Dollar "]) expect(FX.normalizeCurrency(c)).toEqual({ code: "USD", assumed: false });
+    expect(FX.normalizeCurrency(undefined)).toEqual({ code: "USD", assumed: true });
+    expect(FX.normalizeCurrency("")).toEqual({ code: "USD", assumed: true });
+    expect(FX.normalizeCurrency("naira").code).toBe("NGN");
+    expect(FX.normalizeCurrency("₦").code).toBe("NGN");
+  });
+  it("USD skips conversion: rate 1, amount unchanged, flagged not converted", () => {
+    const f = FX.convert(200, "$");
+    expect(f).toMatchObject({ from: "USD", usd: 200, rate: 1, converted: false });
+    expect(FX.needsFx("dollars")).toBe(false);
+    expect(FX.needsFx("NGN")).toBe(true);
+    expect(FX.convert(10000, "NGN").converted).toBe(true);
+  });
+  it("USD validation uses the dollar amount directly", () => {
+    const ok = { recipient_email: "sam@example.com", amount: 200, due_date: "2099-01-01", description: "Consulting" };
+    expect(() => validateInvoice(ok, FX.convert(200, "USD").usd)).not.toThrow();
+  });
+});
