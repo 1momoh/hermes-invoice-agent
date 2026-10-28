@@ -86,6 +86,8 @@ async function verify(req: Request): Promise<boolean> {
 export async function webhook(req: Request, res: Response) {
   let ok = false;
   try { ok = await verify(req); } catch (e: any) { console.error("verify error:", e?.message); }
+  const ev0: any = req.body;
+  console.log("webhook", ev0?.event_type, ev0?.resource?.invoice?.id || ev0?.resource?.id, "verified=" + ok);
   if (!ok) return res.status(400).json({ error: "signature verification failed" });
   const ev: any = req.body;
   res.status(200).json({ received: true }); // ack fast; PayPal retries non-2xx
