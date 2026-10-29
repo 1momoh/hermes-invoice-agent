@@ -20,8 +20,8 @@ function md(src){const L=String(src??'').replace(/\r/g,'').split('\n'),o=[];let 
  return o.join('')}
 function addMd(t){const d=wrap('a');d.innerHTML=`<div class="b md">${md(t)}</div>`;return d}
 function typing(){const d=wrap('a typing');d.setAttribute('aria-label','Hermes is typing');d.innerHTML='<div class="b"><i></i><i></i><i></i></div>';return d}
-function fxLine(f){if(!f)return '';if(f.from==='USD')return `<div class="fx"><b>${esc(H.money(f.usd))} USD · no conversion needed</b>${f.assumed?'<br>no currency given, so Hermes assumed USD':''}</div>`;const r=f.rate.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
- return `<div class="fx"><b>${esc(H.money(f.amount,f.from))} → ${esc(H.money(f.usd))} USD</b><br>rate ${esc(f.symbol.trim())}${r}/$ · ${f.source==='live'?'live':'fixed'} · PayPal settles in USD</div>`}
+function fxLine(f){if(!f)return '';if(f.from==='USD')return `<div class="fx"><b>${esc(H.money(f.usd))} USD, no conversion needed</b>${f.assumed?'<br>no currency given, so Hermes assumed USD':''}</div>`;const r=f.rate.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ return `<div class="fx"><b>${esc(H.money(f.amount,f.from))} → ${esc(H.money(f.usd))} USD</b><br>rate ${esc(f.symbol.trim())}${r}/$, ${f.source==='live'?'live':'fixed'}. PayPal settles in USD</div>`}
 function receipt(o){return `<div class="receipt">${o.stamp?`<span class="stamp ${o.stamp==='PAID'?'paid':''}">${o.stamp}</span>`:''}<div class="rh"><span>${esc(o.head)}</span><span>${esc(o.no||'')}</span></div>
  ${o.who?`<p class="who">${esc(o.who)}</p>`:''}${(o.lines||[]).map(([a,b])=>`<div class="line"><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join('')}
  ${o.total?`<div class="line tot"><span>Total</span><span>${esc(o.total)}</span></div>`:''}${o.fx||''}</div>`}
@@ -44,7 +44,7 @@ function trace(steps,title){const el=document.getElementById('trace');if(!steps?
  b.textContent=txt;b.className='b '+cls;run.scrollIntoView?.({block:'nearest'})}
 function traceEmpty(){document.getElementById('trace').innerHTML='<li class="ph empty">Send a message and you’ll see which model step ran, the PayPal call it chose, and where it stopped for your signature.</li>'}
 function confirmCard(r){const a=r.args||{},d=wrap('a'),acts=r.actions||[{tool:r.tool,args:a,summary:r.summary}];lastFx=r.fx;lastDesc=a.description||'';
- const ivLine=x=>{const v=x.invoice;if(!v)return [x.summary,''];return ['No. '+(v.number||'·')+' · '+(v.client||'client')+(v.status?' · '+v.status:''),H.money(v.amount,v.currency||'USD')]};
+ const ivLine=x=>{const v=x.invoice;if(!v)return [x.summary,''];return ['No. '+(v.number||'none')+', '+(v.client||'client')+(v.status?', '+v.status:''),H.money(v.amount,v.currency||'USD')]};
  if(r.tool!=='create_and_send_invoice'||acts.length>1){const reminders=acts.every(x=>x.tool==='send_reminder'),tot=acts.reduce((s,x)=>s+Number(x.invoice?.amount||0),0);
   d.innerHTML=receipt({head:'Needs your signature',no:acts.length>1?acts.length+' actions':'',who:reminders?(acts.length>1?'Send '+acts.length+' payment reminders':'Send a payment reminder'):acts.length>1?acts.length+' actions':'',lines:acts.map(ivLine),total:tot&&acts.every(x=>x.invoice)?H.money(tot):''})}
  else d.innerHTML=receipt({head:'Draft invoice',no:a.due_date?'Due '+a.due_date:'',who:a.recipient_email,lines:[[a.description,H.money(a.amount,a.currency)]],total:r.fx?H.money(r.fx.usd)+' USD':'',fx:fxLine(r.fx)});
@@ -59,7 +59,7 @@ function confirmCard(r){const a=r.args||{},d=wrap('a'),acts=r.actions||[{tool:r.
    trace(x.trace,v?'Signed':'Discarded');show(x)};row.appendChild(b)}
  rc.appendChild(row);if(!demo)row.firstChild.focus({preventScroll:true})}
 function outcomesCard(x){const os=x.outcomes||[];if(!os.length)return;const ok=os.filter(o=>o.ok).length,rem=os.every(o=>o.tool==='send_reminder');
- const d=wrap('a'),lab=o=>o.invoice?'No. '+(o.invoice.number||'·')+' · '+(o.invoice.client||''):o.summary;
+ const d=wrap('a'),lab=o=>o.invoice?'No. '+(o.invoice.number||'none')+', '+(o.invoice.client||''):o.summary;
  d.innerHTML=receipt({head:rem?'Reminders':'PayPal result',no:`${ok} of ${os.length} sent`,lines:os.map(o=>[lab(o),o.ok?'Sent':'Failed'])})+
   (os.some(o=>!o.ok)?`<div class="b err">${os.filter(o=>!o.ok).map(o=>`<p><strong>${esc(lab(o))}:</strong> ${esc(o.error||'failed')}</p>`).join('')}</div>`:'');
  d.querySelectorAll('.line span:last-child').forEach((s,k)=>s.className=os[k]?.ok?'ok':'bad');loadRecent()}
@@ -88,7 +88,7 @@ function paidCard(t){const d=wrap('a');d.innerHTML=receipt({head:'Payment receiv
 const SAMPLE=[{id:'INV2-DM4C-CGKR',number:'0007',recipient:'tunde@example.com',amount:'37.47',status:'PAID',due:'2026-10-30'},{id:'INV2-K2PQ-88XA',number:'0006',recipient:'wanjiru@example.com',amount:'92.40',status:'SENT',due:'2026-11-04'},{id:'INV2-YVUC-7KDS',number:'0005',recipient:'ada@example.com',amount:'10.00',status:'MARKED_AS_PAID',due:'2026-11-06'}];
 function recent(rows){const el=document.getElementById('recent');
  if(!rows.length){el.innerHTML='<p class="empty">No invoices yet. Your first one will appear here the moment PayPal accepts it.</p>';return}
- el.innerHTML=rows.slice(0,3).map(x=>receipt({head:'No. '+(x.number||'·'),no:'Due '+(x.due||'·'),who:x.recipient,total:H.money(x.amount)+' USD',stamp:/^(PAID|MARKED_AS_PAID)$/.test(x.status)?'PAID':x.status==='CANCELLED'?'VOID':''})).join('')}
+ el.innerHTML=rows.slice(0,3).map(x=>receipt({head:'No. '+(x.number||'none'),no:'Due '+(x.due||'not set'),who:x.recipient,total:H.money(x.amount)+' USD',stamp:/^(PAID|MARKED_AS_PAID)$/.test(x.status)?'PAID':x.status==='CANCELLED'?'VOID':''})).join('')}
 async function loadRecent(){if(demo)return recent(SAMPLE);const el=document.getElementById('recent');
  try{const r=await (await fetch('/api/invoices')).json();if(!Array.isArray(r))throw Error(r.error);recent(r.slice().sort((a,b)=>String(b.number).localeCompare(String(a.number))))}
  catch(e){el.innerHTML='<p class="empty">Couldn’t reach PayPal. <button class="btn" type="button" id="rt">Try again</button></p>';document.getElementById('rt').onclick=loadRecent}}

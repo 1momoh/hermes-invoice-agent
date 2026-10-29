@@ -2,17 +2,17 @@ const today=new Date().toISOString().slice(0,10),q=location.search,demo=q.includ
 const open=s=>['SENT','UNPAID','PARTIALLY_PAID','SCHEDULED'].includes(s),isOverdue=r=>open(r.status)&&r.due&&r.due<today,isPaid=s=>s==='PAID'||s==='MARKED_AS_PAID';
 const ngn=v=>'₦'+Math.round(Number(v||0)*rate).toLocaleString('en-US');
 const LABEL={MARKED_AS_PAID:'PAID',PARTIALLY_PAID:'PART PAID'};
-function grid(){const theme=agGrid.themeQuartz.withParams({backgroundColor:'#fcfaf5',foregroundColor:'#1a1814',headerBackgroundColor:'#fcfaf5',headerTextColor:'#4a463f',
- borderColor:'#ebe4d6',rowBorder:{style:'solid',width:1,color:'#ebe4d6'},headerRowBorder:{style:'solid',width:1,color:'#1a1814'},columnBorder:false,
- rowHoverColor:'#f3eee4',accentColor:'#b3301a',fontFamily:"'JetBrains Mono',ui-monospace,monospace",fontSize:13,headerFontSize:12,headerFontWeight:500,
- rowHeight:48,headerHeight:48,wrapperBorder:false,wrapperBorderRadius:0,oddRowBackgroundColor:'#fcfaf5',spacing:8,cellHorizontalPadding:24,chromeBackgroundColor:'#fcfaf5',iconSize:12});
+function grid(){const theme=agGrid.themeQuartz.withParams({backgroundColor:'var(--color-sheet)',foregroundColor:'var(--color-ink)',headerBackgroundColor:'var(--color-sheet)',headerTextColor:'var(--color-muted)',
+ borderColor:'var(--color-rule-2)',rowBorder:{style:'solid',width:1,color:'var(--color-rule-2)'},headerRowBorder:{style:'solid',width:1,color:'var(--color-ink)'},columnBorder:false,
+ rowHoverColor:'var(--color-accent-soft)',accentColor:'var(--color-accent)',fontFamily:'var(--font-body)',fontSize:14,headerFontSize:13,headerFontWeight:600,
+ rowHeight:48,headerHeight:48,wrapperBorder:false,wrapperBorderRadius:0,oddRowBackgroundColor:'var(--color-sheet)',spacing:8,cellHorizontalPadding:24,chromeBackgroundColor:'var(--color-sheet)',iconSize:12});
  api=agGrid.createGrid(document.getElementById('grid'),{theme,domLayout:'autoHeight',suppressCellFocus:false,
  columnDefs:[{field:'number',headerName:'No.',width:96},
-  {field:'recipient',headerName:'Client',flex:1,minWidth:200,cellStyle:{fontFamily:"'Fraunces',Georgia,serif",fontSize:'15px'}},
+  {field:'recipient',headerName:'Client',flex:1,minWidth:200,cellStyle:{fontWeight:'600'}},
   {field:'status',headerName:'Status',width:136,cellRenderer:p=>{const s=isOverdue(p.data)?'OVERDUE':p.value;const c=isPaid(s)?'paid':s==='OVERDUE'?'overdue':s==='CANCELLED'?'void':'';return `<span class="tag ${c}">${LABEL[s]||s.replace(/_/g,' ')}</span>`}},
   {field:'amount',headerName:'USD',width:120,type:'rightAligned',valueFormatter:p=>H.money(p.value)},
-  {colId:'1',headerName:'NGN',width:136,type:'rightAligned',valueGetter:p=>Number(p.data.amount||0)*rate,valueFormatter:p=>ngn(p.value/rate),cellStyle:{color:'#69635a'}},
-  {field:'due',headerName:'Due',width:128,sort:'asc'},{field:'id',headerName:'PayPal ref',width:248,cellStyle:{color:'#69635a',fontSize:'12px'}}],
+  {colId:'1',headerName:'NGN',width:136,type:'rightAligned',valueGetter:p=>Number(p.data.amount||0)*rate,valueFormatter:p=>ngn(p.value/rate),cellStyle:{color:'var(--color-accent)',fontWeight:'500'}},
+  {field:'due',headerName:'Due',width:128,sort:'asc'},{field:'id',headerName:'PayPal ref',width:248,cellStyle:{color:'var(--color-muted)',fontFamily:'var(--font-code)',fontSize:'12px'}}],
  defaultColDef:{sortable:true,resizable:true,suppressHeaderMenuButton:true},getRowId:p=>p.data.id,rowClassRules:{overdue:p=>isOverdue(p.data)},rowData:null});
  const fit=()=>api.setColumnsVisible(['id','1'],innerWidth>720);fit();addEventListener('resize',fit)}
 function state(html){const s=document.getElementById('state');s.hidden=!html;s.innerHTML=html||'';document.getElementById('grid').hidden=!!html}
