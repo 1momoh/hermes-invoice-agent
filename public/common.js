@@ -2,7 +2,7 @@
 window.H={fx:null,
  money(v,cur='USD'){const s={USD:'$',NGN:'₦',KES:'KSh ',GHS:'GH₵',ZAR:'R ',INR:'₹'}[cur]??cur+' ';return s+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})},
  rate(c){return H.fx?.currencies?.[c]},
- async loadFx(demo){try{H.fx=demo?{settle:'USD',provider:'open.er-api.com',currencies:{NGN:{symbol:'₦',rate:1334.3,source:'live',asOf:'2026-10-26T00:02:31Z'}}}:await (await fetch('/api/fx')).json()}catch{H.fx=null}
+ async loadFx(demo){try{H.fx=demo?{settle:'USD',provider:'open.er-api.com',currencies:{NGN:{symbol:'₦',rate:1346.24,source:'live',asOf:'2026-10-26T00:02:31Z'}}}:await (await fetch('/api/fx')).json()}catch{H.fx=null}
   const el=document.getElementById('rate');if(!el)return;const n=H.rate('NGN');
   if(!n){el.hidden=true;return}
   el.innerHTML=`<span>$1 = <b>₦${n.rate.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</b></span><span class="src">${n.source==='live'?'live from '+H.fx.provider:'fixed rate'}</span>`;
