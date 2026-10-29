@@ -1,28 +1,13 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermes · Ledger</title>
-<meta name="description" content="Every PayPal invoice Hermes has sent, with what's collected, what's open and what's late."><meta name="theme-color" content="#f3eee4">
+<meta name="description" content="Every PayPal invoice Hermes has sent, with what's collected, what's open and what's late."><meta name="theme-color" content="#eef1f5">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/styles.css"><style>
-.head{padding:48px 0 32px}
-.tally{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin-bottom:48px}
-.tally>div{padding:24px 24px 24px 0}.tally>div+div{border-left:1px solid var(--rule);padding-left:24px}
-.tally .l{font:500 12px/16px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink2);margin:0}
-.tally .v{font:400 48px/48px var(--serif);letter-spacing:-.02em;margin:16px 0 8px;font-variant-numeric:tabular-nums}.tally .s{font:14px/20px var(--mono);color:var(--ink3);margin:0}
-.tally .late .v.has{color:var(--red)}
-.bookhead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:16px}
-.bookhead h2{font:600 24px/32px var(--serif);margin:0}.meta{font:12px/16px var(--mono);color:var(--ink3)}
-.book{background:var(--sheet);border:1px solid var(--ink);border-radius:12px;overflow:hidden}
-#grid{min-height:240px}.ag-row.overdue .ag-cell{color:var(--red)}
-.state{padding:48px 24px;text-align:center;font:16px/24px var(--serif);color:var(--ink2)}.state .btn{margin-top:16px}
-.foot{font:12px/16px var(--mono);color:var(--ink3);margin:16px 0 64px;max-width:600px}
-@media (max-width:720px){.head{padding:32px 0 24px}.tally{grid-template-columns:1fr}.tally>div,.tally>div+div{padding:16px 0;border-left:0}.tally>div+div{border-top:1px solid var(--rule)}
- .tally .v{font-size:36px;line-height:40px;margin:8px 0 4px}.bookhead{flex-direction:column;gap:4px}}
-</style></head><body><a class="skip" href="#book">Skip to invoices</a><div class="wrap">
-<header class="top"><a class="brand" href="/"><svg class="mark" width="26" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M12 6h40v46l-6.7 6-6.7-6-6.6 6-6.7-6-6.6 6L12 52z" fill="#1a1814"/><path d="M20 34c6-14 18-20 28-20-3 4-6 6-10 7 3 1 5 0 7-1-3 5-7 7-12 7 2 1 4 1 6 1-5 5-12 7-19 6z" fill="#fcfaf5"/></svg>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@600&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="/styles.css"></head><body><a class="skip" href="#book">Skip to invoices</a><div class="wrap">
+<header class="top"><a class="brand" href="/"><svg class="mark" width="26" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M12 6h40v46l-6.7 6-6.7-6-6.6 6-6.7-6-6.6 6L12 52z" fill="currentColor"/><path d="M20 34c6-14 18-20 28-20-3 4-6 6-10 7 3 1 5 0 7-1-3 5-7 7-12 7 2 1 4 1 6 1-5 5-12 7-19 6z" style="fill:var(--color-sheet)"/></svg>
 Hermes</a><span class="rate" id="rate" tabindex="0" role="note"></span>
 <nav class="tabs" aria-label="Main"><a href="/">Chat</a><a href="/dashboard" aria-current="page">Ledger</a></nav></header>
-<main><div class="head"><p class="eyebrow">Ledger</p><h1>Who owes you, at a glance.</h1>
-<p class="sub">Every invoice Hermes has sent through PayPal. It updates the moment a client pays.</p></div>
+<main><div class="head"><h1>Ledger</h1>
+<p class="sub">Who owes you, at a glance. Every invoice Hermes has sent through PayPal. It updates the moment a client pays.</p></div>
 <section class="tally" aria-label="Totals">
 <div><p class="l">Collected</p><p class="v" id="paid"><span class="skel" style="display:inline-block;width:160px;height:40px"></span></p><p class="s" id="paidn">&nbsp;</p></div>
 <div><p class="l">Open</p><p class="v" id="out"><span class="skel" style="display:inline-block;width:160px;height:40px"></span></p><p class="s" id="outn">&nbsp;</p></div>
