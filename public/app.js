@@ -85,7 +85,7 @@ async function send(t){t=(t||inp.value).trim();if(!t){inp.focus();return}inp.val
  try{r=await post('/api/chat',{message:t});if(r.expired){session=null;r=await post('/api/chat',{message:t})}}catch{r={error:'Connection failed. Check your network and try again.'}}ty.remove();trace(r.trace,'“'+(t.length>40?t.slice(0,40)+'…':t)+'”');show(r)}
 document.getElementById('f').onsubmit=e=>{e.preventDefault();send()};document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>send(c.textContent));
 function paidCard(t){const d=wrap('a');d.innerHTML=receipt({head:'Payment received',no:now(),lines:[[t,'']],stamp:'PAID'})}
-const SAMPLE=[{id:'INV2-DM4C-CGKR',number:'0007',recipient:'tunde@example.com',amount:'37.47',status:'PAID',due:'2026-10-30'},{id:'INV2-K2PQ-88XA',number:'0006',recipient:'wanjiru@example.com',amount:'92.40',status:'SENT',due:'2026-11-04'},{id:'INV2-YVUC-7KDS',number:'0005',recipient:'ada@example.com',amount:'10.00',status:'MARKED_AS_PAID',due:'2026-11-06'}];
+const SAMPLE=[{id:'INV2-DM4C-CGKR',number:'0009',recipient:'tunde@example.com',amount:'37.14',status:'PAID',due:'2026-10-30'},{id:'INV2-K2PQ-88XA',number:'0008',recipient:'wanjiru@example.com',amount:'92.40',status:'SENT',due:'2026-11-04'},{id:'INV2-YVUC-7KDS',number:'0006',recipient:'ada@example.com',amount:'10.00',status:'MARKED_AS_PAID',due:'2026-11-06'}];
 function recent(rows){const el=document.getElementById('recent');
  if(!rows.length){el.innerHTML='<p class="empty">No invoices yet. Your first one will appear here the moment PayPal accepts it.</p>';return}
  el.innerHTML=rows.slice(0,3).map(x=>receipt({head:'No. '+(x.number||'none'),no:'Due '+(x.due||'not set'),who:x.recipient,total:H.money(x.amount)+' USD',stamp:/^(PAID|MARKED_AS_PAID)$/.test(x.status)?'PAID':x.status==='CANCELLED'?'VOID':''})).join('')}
@@ -95,10 +95,11 @@ async function loadRecent(){if(demo)return recent(SAMPLE);const el=document.getE
 H.loadFx(demo);loadRecent();traceEmpty();
 if(demo){document.getElementById('chips').hidden=true;
  add('Bill tunde@example.com ₦50,000 for logo design, due Friday','u');
- const fx={from:'NGN',symbol:'₦',amount:50000,usd:37.47,rate:1334.3,source:'live'};
- trace([{k:'think',label:'deepseek-chat chose create_and_send_invoice',ms:1412},{k:'tool',label:'Call create_and_send_invoice',detail:'{"recipient_email":"tunde@example.com","amount":50000,"currency":"NGN","due_date":"2026-10-30"}'},{k:'fx',label:'Convert NGN → USD',detail:'50,000 ÷ 1334.3 = 37.47 (live rate)'},{k:'guard',label:'Paused for your signature',detail:'create_and_send_invoice changes money or emails a client, so it needs approval'}],'“Bill tunde@example.com ₦50,000 for logo…”');
+ const fx={from:'NGN',symbol:'₦',amount:50000,usd:37.14,rate:1346.24,source:'live'};
+ trace([{k:'think',label:'deepseek-chat chose create_and_send_invoice',ms:1412},{k:'tool',label:'Call create_and_send_invoice',detail:'{"recipient_email":"tunde@example.com","amount":50000,"currency":"NGN","due_date":"2026-10-30"}'},{k:'fx',label:'Convert NGN → USD',detail:'50,000 ÷ 1346.24 = 37.14 (live rate)'},{k:'guard',label:'Paused for your signature',detail:'create_and_send_invoice changes money or emails a client, so it needs approval'}],'“Bill tunde@example.com ₦50,000 for logo…”');
  confirmCard({tool:'create_and_send_invoice',args:{recipient_email:'tunde@example.com',description:'Logo design',amount:50000,currency:'NGN',due_date:'2026-10-30'},fx});
  trace([{k:'guard',label:'You signed',detail:'create_and_send_invoice'},{k:'act',label:'PayPal create_and_send_invoice',detail:'{"id":"INV2-DM4C-CGKR-LXJ7-C7ZL","status":"SENT"}',ms:2210},{k:'think',label:'deepseek-chat wrote a reply',ms:960}],'Signed');
- sentCard({id:'INV2-DM4C-CGKR-LXJ7',status:'SENT',recipient:'tunde@example.com',amount_usd:'37.47',due_date:'2026-10-30',pay_link:'https://www.sandbox.paypal.com/invoice/p/#DM4CCGKRLXJ7C7ZL',fx})}
+ sentCard({id:'INV2-DM4C-CGKR-LXJ7',status:'SENT',recipient:'tunde@example.com',amount_usd:'37.14',due_date:'2026-10-30',pay_link:'https://www.sandbox.paypal.com/invoice/p/#DM4CCGKRLXJ7C7ZL',fx});
+ paidCard('Tunde just paid $37.14');H.toast('Tunde just paid $37.14');loadRecent()}
 else{add('Who are we billing? Give me the client’s email, the amount in any currency, and what it’s for. I won’t send anything until you sign.');
  if(!q.includes('nolive')){const on=e=>{const x=JSON.parse(e.data).text;/paid/i.test(x)?paidCard(x):add(x);H.toast(x);loadRecent()};H.events({invoice:on,event:on})}}
