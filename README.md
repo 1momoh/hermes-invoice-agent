@@ -80,7 +80,6 @@ Every variable is documented in [.env.example](.env.example).
 ## Dashboard
 `/dashboard` is the ledger: an AG Grid Community table (status, USD, NGN at the live rate, due date, overdue rows in red) under Collected / Open / Past due totals, updated live over SSE. Add `?demo` to either page for sample data.
 
-Design audit: [docs/design-audit.md](docs/design-audit.md). Hackathon pitch: [docs/winning-edge.md](docs/winning-edge.md).
 
 ## API
 - `POST /api/chat {message, session?}` returns a reply or a `confirm` step (with `fx` and `trace`)
