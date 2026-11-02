@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: hermes-invoice-agent
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: AGENT_MODE
+        sync: false
+      - key: APP_TOKEN
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PUBLIC_URL
+        value: https://hermes-invoice-agent.onrender.com
+      - key: FX_MODE
+        value: live
+      - key: POLL_MINUTES
+        value: "2"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DEMO_ALLOWED_DOMAINS
+        value: example.com
